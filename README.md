@@ -1,4 +1,6 @@
-# OpenMoHAA (Sudo-Ivan fork)
+# OpenMoHAA (Sudo-Ivans fork)
+
+This is a experimental fork use at your own risk.
 
 ## What is OpenMoHAA?
 
@@ -28,7 +30,7 @@ Powered by [ioquake3](https://github.com/ioquake/ioq3) and the [F.A.K.K SDK](htt
 - test: add adversarial tests that found 4 engine bugs `7b822f67`
 - Added `workflow_dispatch` manual trigger to all GitHub Actions workflows
 - Fixed Node 20 deprecation and pinned all actions to full commit SHAs
-- Restructured release workflows for GitHub immutable release compat
+- Restructured release workflows
 
 *OpenMoHAA is an independent project and is not affiliated with or endorsed by Electronic Arts.*
 
