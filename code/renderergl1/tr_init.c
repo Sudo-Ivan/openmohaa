@@ -305,7 +305,6 @@ static void InitOpenGL( void )
 		GLint		temp;
 		
 		GLimp_Init(qtrue);
-		haveClampToEdge = qtrue;
 
 		strcpy( renderer_buffer, glConfig.renderer_string );
 		Q_strlwr( renderer_buffer );

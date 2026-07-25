@@ -366,7 +366,6 @@ static void InitOpenGL( void )
 		
 		GLimp_Init( qfalse );
 		GLimp_InitExtraExtensions();
-		haveClampToEdge = qtrue;
 
 		glConfig.textureEnvAddAvailable = qtrue;
 
