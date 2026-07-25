@@ -26,6 +26,79 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 static cvar_t *com_perfprofile;
 static cvar_t *com_loadScreenMs;
 static cvar_t *com_touchMemory;
+static cvar_t *com_perf_notify;
+
+static const char *Com_PerfRequestedName(void)
+{
+    if (!com_perfprofile) {
+        return "unknown";
+    }
+
+    switch (com_perfprofile->integer) {
+    case COM_PERFPROFILE_OFF:
+        return "off";
+    case COM_PERFPROFILE_LEGACY:
+        return "legacy";
+    case COM_PERFPROFILE_BALANCED:
+        return "balanced";
+    case COM_PERFPROFILE_MODERN:
+        return "modern";
+    case COM_PERFPROFILE_AUTO:
+        return "auto";
+    default:
+        return "invalid";
+    }
+}
+
+static const char *Com_PerfResolvedName(int profile)
+{
+    switch (profile) {
+    case COM_PERFPROFILE_LEGACY:
+        return "legacy";
+    case COM_PERFPROFILE_BALANCED:
+        return "balanced";
+    case COM_PERFPROFILE_MODERN:
+        return "modern";
+    default:
+        return "off";
+    }
+}
+
+static void Com_PerfPrintStatus(int profile)
+{
+    unsigned long long ramMb;
+
+    if (!com_perf_notify || !com_perf_notify->integer) {
+        return;
+    }
+
+    if (profile == COM_PERFPROFILE_OFF) {
+        Com_Printf("OpenMoHAA perf: com_perfprofile is off (0).\n");
+        return;
+    }
+
+    ramMb = Sys_TotalPhysicalMemory() / (1024ULL * 1024ULL);
+
+    Com_Printf("----- OpenMoHAA perf profile active: %s", Com_PerfResolvedName(profile));
+    if (com_perfprofile && com_perfprofile->integer == COM_PERFPROFILE_AUTO) {
+        Com_Printf(" (com_perfprofile auto");
+        if (ramMb > 0) {
+            Com_Printf(", %llu MB RAM", ramMb);
+        }
+        Com_Printf(")");
+    } else {
+        Com_Printf(" (com_perfprofile %s)", Com_PerfRequestedName());
+    }
+    Com_Printf(" -----\n");
+
+    Com_Printf(
+        "  loadScreenMs %d | touchMemory %s\n",
+        Com_LoadScreenIntervalMs(),
+        com_touchMemory && com_touchMemory->integer == 0   ? "off"
+        : com_touchMemory && com_touchMemory->integer == 1 ? "on"
+                                                           : "auto"
+    );
+}
 
 static void Com_PerfSetIfDefault(cvar_t *var, const char *value)
 {
@@ -44,8 +117,22 @@ void Com_PerfInit(void)
     com_loadScreenMs = Cvar_Get("com_loadScreenMs", "0", CVAR_ARCHIVE);
     com_touchMemory  = Cvar_Get("com_touchMemory", "-1", CVAR_ARCHIVE);
     Cvar_CheckRange(com_touchMemory, -1, 1, qtrue);
+    com_perf_notify  = Cvar_Get("com_perf_notify", "1", CVAR_ARCHIVE);
 
     Cmd_AddCommand("perf_apply", Com_ApplyPerfProfileCommon);
+    Cmd_AddCommand("perf_status", Com_PerfStatus_f);
+}
+
+void Com_PerfStatus_f(void)
+{
+    int profile;
+
+    if (!com_perfprofile) {
+        Com_PerfInit();
+    }
+
+    profile = Com_PerfResolveProfile();
+    Com_PerfPrintStatus(profile);
 }
 
 int Com_PerfResolveProfile(void)
@@ -95,7 +182,7 @@ void Com_ApplyPerfProfileCommon(void)
 
     profile = Com_PerfResolveProfile();
     if (profile == COM_PERFPROFILE_OFF) {
-        Com_Printf("com_perfprofile is off (0). No changes applied.\n");
+        Com_PerfPrintStatus(profile);
         return;
     }
 
@@ -130,13 +217,7 @@ void Com_ApplyPerfProfileCommon(void)
         break;
     }
 
-    Com_Printf(
-        "Applied com_perfprofile %d (%s)\n",
-        profile,
-        profile == COM_PERFPROFILE_LEGACY   ? "legacy"
-        : profile == COM_PERFPROFILE_MODERN ? "modern"
-                                            : "balanced"
-    );
+    Com_PerfPrintStatus(profile);
 }
 
 void Com_ApplyPerfProfileRenderer(void)
@@ -146,6 +227,10 @@ void Com_ApplyPerfProfileRenderer(void)
     profile = Com_PerfResolveProfile();
     if (profile == COM_PERFPROFILE_OFF) {
         return;
+    }
+
+    if (com_perf_notify && com_perf_notify->integer) {
+        Com_Printf("OpenMoHAA perf: renderer tuning for %s profile.\n", Com_PerfResolvedName(profile));
     }
 
     switch (profile) {

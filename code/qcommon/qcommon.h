@@ -1450,6 +1450,7 @@ void Com_PerfInit(void);
 int Com_PerfResolveProfile(void);
 void Com_ApplyPerfProfileCommon(void);
 void Com_ApplyPerfProfileRenderer(void);
+void Com_PerfStatus_f(void);
 qboolean Com_ShouldTouchMemoryAfterLoad(void);
 int Com_LoadScreenIntervalMs(void);
 

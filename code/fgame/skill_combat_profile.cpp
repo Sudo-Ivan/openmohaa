@@ -25,6 +25,61 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "gamecvars.h"
 
 cvar_t *g_sp_ai_debug;
+static cvar_t *g_sp_ai_notify;
+
+static int g_lastNotifySkill = -1;
+static char g_lastNotifyMap[MAX_QPATH] = "";
+
+static const char *SkillCombatProfile_SkillName(int skillIndex)
+{
+    switch (skillIndex) {
+    case 0:
+        return "easy";
+    case 2:
+        return "hard";
+    default:
+        return "medium";
+    }
+}
+
+static void SkillCombatProfile_Notify(void)
+{
+    int skillIndex;
+
+    if (!SkillCombatProfile_Active()) {
+        return;
+    }
+
+    if (!g_sp_ai_notify) {
+        g_sp_ai_notify = gi.Cvar_Get("g_sp_ai_notify", "1", 0);
+    }
+    if (!g_sp_ai_notify->integer) {
+        return;
+    }
+
+    skillIndex = SkillIndex();
+    if (skillIndex == g_lastNotifySkill && !Q_stricmp(g_profileMap, g_lastNotifyMap)) {
+        return;
+    }
+
+    g_lastNotifySkill = skillIndex;
+    Q_strncpyz(g_lastNotifyMap, g_profileMap, sizeof(g_lastNotifyMap));
+
+    gi.Printf(
+        "----- OpenMoHAA SP AI: skill combat profile active (%s",
+        SkillCombatProfile_SkillName(skillIndex)
+    );
+    if (g_profileMap[0]) {
+        gi.Printf(", map %s", g_profileMap);
+    }
+    gi.Printf(") -----\n");
+    gi.Printf(
+        "  aimScatter x%.2f | accuracy x%.2f | notice x%.2f\n",
+        g_activeProfile.aimScatterMult,
+        g_activeProfile.accuracyMult,
+        g_activeProfile.noticeMult
+    );
+}
 
 typedef struct mapSkillPreset_s {
     const char *prefix;
@@ -105,6 +160,8 @@ static void SkillCombatProfile_Rebuild(void)
     g_activeProfile.noticeMult *= noticeExtra;
     g_profileReady = qtrue;
 
+    SkillCombatProfile_Notify();
+
     if (g_sp_ai_debug && g_sp_ai_debug->integer) {
         gi.Printf(
             "SkillCombatProfile skill=%d map=%s aimScatter=%.2f accuracy=%.2f notice=%.2f\n",
@@ -119,8 +176,11 @@ static void SkillCombatProfile_Rebuild(void)
 
 void SkillCombatProfile_Init(void)
 {
-    g_sp_ai_debug = gi.Cvar_Get("g_sp_ai_debug", "0", 0);
+    g_sp_ai_debug   = gi.Cvar_Get("g_sp_ai_debug", "0", 0);
+    g_sp_ai_notify  = gi.Cvar_Get("g_sp_ai_notify", "1", 0);
     g_profileMap[0] = '\0';
+    g_lastNotifySkill = -1;
+    g_lastNotifyMap[0] = '\0';
     SkillCombatProfile_Rebuild();
 }
 
