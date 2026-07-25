@@ -12,7 +12,10 @@ on:
       environment:
         required: true
         type: string
-        
+
+permissions:
+  contents: read
+
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: RelWithDebInfo
@@ -45,7 +48,7 @@ jobs:
 
     - name: Cache Flex/Bison
       id: cache-flexbison
-      uses: actions/cache@v4
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: 'thirdparties/winflexbison-install'
         key: ${{ runner.os }}-${{ matrix.architecture.name }}-flexbison-${{ env.flexbison-branch }}-v2
@@ -78,7 +81,7 @@ jobs:
 
     - name: Cache Required Packages
       id: cache-required-packages
-      uses: actions/cache@v4
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: 'C:\Packages'
         key: ${{ runner.os }}-${{ matrix.architecture.name }}-required-packages-v1
@@ -112,7 +115,7 @@ jobs:
     # Cache SDL
     - name: Cache SDL2
       id: cache-sdl2
-      uses: actions/cache@v4
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: 'thirdparties/SDL2/install'
         key: ${{ runner.os }}-${{ matrix.architecture.name }}-sdl2-${{ env.sdl2-branch }}-v1
@@ -120,7 +123,7 @@ jobs:
     # SDL2 setup
     - name: Checkout SDL2
       if: steps.cache-sdl2.outputs.cache-hit != 'true'
-      uses: actions/checkout@v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: 'libsdl-org/SDL'
         path: 'thirdparties/SDL2'
@@ -140,7 +143,7 @@ jobs:
     ###
     - name: Cache OpenAL
       id: cache-openal-soft
-      uses: actions/cache@v4
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: 'thirdparties/soft-oal/install'
         key: ${{ runner.os }}-${{ matrix.architecture.name }}-openal-soft-${{ env.openal-soft-branch }}-v1
@@ -148,7 +151,7 @@ jobs:
     # soft-oal setup
     - name: Checkout soft-oal
       if: steps.cache-openal-soft.outputs.cache-hit != 'true'
-      uses: actions/checkout@v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: 'kcat/openal-soft'
         path: 'thirdparties/soft-oal'
@@ -184,7 +187,7 @@ jobs:
     ###
     - name: Cache cURL
       id: cache-curl
-      uses: actions/cache@v4
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: 'thirdparties/curl/install'
         key: ${{ runner.os }}-${{ matrix.architecture.name }}-curl-${{ env.curl-version }}-v1
@@ -192,7 +195,7 @@ jobs:
     # cURL setup
     - name: Checkout cURL
       if: steps.cache-curl.outputs.cache-hit != 'true'
-      uses: actions/checkout@v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: 'curl/curl'
         path: 'thirdparties/curl'
@@ -214,7 +217,7 @@ jobs:
     # Project
     ###
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         path: 'source'
 
@@ -268,7 +271,7 @@ jobs:
     # Artifact
     ###
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: out-windows-${{matrix.architecture.name}}
         if-no-files-found: error
@@ -277,7 +280,7 @@ jobs:
           ${{github.workspace}}/package
           !${{github.workspace}}/package/**/*.pdb
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: out-windows-${{matrix.architecture.name}}-pdb
         if-no-files-found: error
@@ -285,7 +288,7 @@ jobs:
         path: |
           ${{github.workspace}}/package
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: out-windows-${{matrix.architecture.name}}-installer
         if-no-files-found: error

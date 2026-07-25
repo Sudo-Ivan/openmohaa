@@ -7,18 +7,27 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   build-platform-linux:
     uses: ./.github/workflows/shared-build-linux.yml
+    permissions:
+      contents: read
     with:
       environment: ${{inputs.environment}}
 
   build-platform-windows:
     uses: ./.github/workflows/shared-build-windows.yml
+    permissions:
+      contents: read
     with:
       environment: ${{inputs.environment}}
 
   build-platform-macos:
     uses: ./.github/workflows/shared-build-macos.yml
+    permissions:
+      contents: read
     with:
       environment: ${{inputs.environment}}

@@ -14,7 +14,10 @@ on:
       environment:
         required: true
         type: string
-        
+
+permissions:
+  contents: read
+
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: RelWithDebInfo
@@ -48,7 +51,7 @@ jobs:
     # Packages
     ###
 
-    - uses: awalsh128/cache-apt-pkgs-action@latest
+    - uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
       name: Install required packages
       with:
         packages: flex bison ninja-build cmake clang libpulse-dev portaudio19-dev libasound2-dev libjack-dev libpipewire-0.3-dev qtbase5-dev libdbus-1-dev
@@ -59,7 +62,7 @@ jobs:
       run: |
         echo "HOST_TRIPLE=$(gcc -dumpmachine)" >> $GITHUB_ENV
 
-    - uses: awalsh128/cache-apt-pkgs-action@latest
+    - uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
       name: Install required cross-platform packages (${{ matrix.architecture.package }})
       if: env.HOST_TRIPLE != matrix.architecture.triple
       with:
@@ -82,7 +85,7 @@ jobs:
     # Cache SDL
     - name: Cache SDL2
       id: cache-sdl2
-      uses: actions/cache@v4
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: 'thirdparties/SDL2/install'
         key: ${{ runner.os }}-${{ matrix.architecture.name }}-sdl2-${{ env.sdl2-branch }}-v1
@@ -90,7 +93,7 @@ jobs:
     # SDL2 setup
     - name: Checkout SDL2
       if: steps.cache-sdl2.outputs.cache-hit != 'true'
-      uses: actions/checkout@v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: 'libsdl-org/SDL'
         path: 'thirdparties/SDL2'
@@ -110,7 +113,7 @@ jobs:
     ###
     - name: Cache OpenAL
       id: cache-openal-soft
-      uses: actions/cache@v4
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: 'thirdparties/soft-oal/install'
         key: ${{ runner.os }}-${{ matrix.architecture.name }}-openal-soft-${{ env.openal-soft-branch }}-v1
@@ -118,7 +121,7 @@ jobs:
     # soft-oal setup
     - name: Checkout soft-oal
       if: steps.cache-openal-soft.outputs.cache-hit != 'true'
-      uses: actions/checkout@v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: 'kcat/openal-soft'
         path: 'thirdparties/soft-oal'
@@ -139,7 +142,7 @@ jobs:
     ###
     - name: Cache WolfSSL
       id: cache-wolfssl
-      uses: actions/cache@v4
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: 'thirdparties/wolfssl/install'
         key: ${{ runner.os }}-${{ matrix.architecture.name }}-wolfssl-${{ env.wolfssl-version }}-v1
@@ -147,7 +150,7 @@ jobs:
     # WolfSSL setup
     - name: Checkout WolfSSL
       if: steps.cache-wolfssl.outputs.cache-hit != 'true'
-      uses: actions/checkout@v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: 'wolfssl/wolfssl'
         path: 'thirdparties/wolfssl'
@@ -171,7 +174,7 @@ jobs:
     ###
     - name: Cache cURL
       id: cache-curl
-      uses: actions/cache@v4
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: 'thirdparties/curl/install'
         key: ${{ runner.os }}-${{ matrix.architecture.name }}-curl-${{ env.curl-version }}-v1
@@ -179,7 +182,7 @@ jobs:
     # cURL setup
     - name: Checkout cURL
       if: steps.cache-curl.outputs.cache-hit != 'true'
-      uses: actions/checkout@v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: 'curl/curl'
         path: 'thirdparties/curl'
@@ -206,7 +209,7 @@ jobs:
     # Project
     ###
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         path: 'source'
 
@@ -251,7 +254,7 @@ jobs:
     # Artifacts
     ###
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: out-linux-${{matrix.architecture.name}}
         if-no-files-found: error

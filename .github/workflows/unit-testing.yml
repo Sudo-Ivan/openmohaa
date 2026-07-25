@@ -5,10 +5,14 @@ on:
     branches:
       - '**'
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -17,13 +21,13 @@ jobs:
     environment: "testing"
 
     steps:
-    - uses: awalsh128/cache-apt-pkgs-action@latest
+    - uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
       name: Install required packages
       with:
         packages: flex bison ninja-build cmake clang libsdl2-dev libopenal-dev
         version: "${{ runner.os }}-${{ runner.arch }}-unittest-v1"
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         path: 'source'
 
