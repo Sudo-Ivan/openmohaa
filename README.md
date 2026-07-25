@@ -14,6 +14,8 @@ Powered by [ioquake3](https://github.com/ioquake/ioq3) and the [F.A.K.K SDK](htt
 
 ## Our changes
 
+- fix(fgame): add EV_GETTER for Item amount/dmamount/name (#920) `28ff8f0c`
+- fix(server): read bans from homestatepath for rehashbans (#926) `28ff8f0c`
 - fix(fgame): use uint32_t for md5_word_t to fix non-deterministic MD5 hashes (#928) `ba3dfdf8`
 - fix(net): harden OOB connect path and add netsec tests `68a1c349`
 - Added `workflow_dispatch` manual trigger to all GitHub Actions workflows
