@@ -1517,10 +1517,10 @@ void DM_Manager::EventFinishRoundTransition(Event *ev)
         p->client->pers.round_kills = p->GetNumDeaths();
 
         if (g_teamSwapHalftime && g_teamSwapHalftime->integer) {
-            teamtype_t curTeam = p->GetDM_Team();
-            if (curTeam == TEAM_ALLIES) {
+            DM_Team *curTeam = p->GetDM_Team();
+            if (curTeam == &m_team_allies) {
                 JoinTeam(p, TEAM_AXIS);
-            } else if (curTeam == TEAM_AXIS) {
+            } else if (curTeam == &m_team_axis) {
                 JoinTeam(p, TEAM_ALLIES);
             }
         }
