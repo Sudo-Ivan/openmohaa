@@ -417,6 +417,10 @@ int COM_Compress( char *data_p ) {
 	int c;
 	qboolean newline = qfalse, whitespace = qfalse;
 
+	if (!data_p) {
+		return 0;
+	}
+
 	in = out = data_p;
 	if (in) {
 		while ((c = *in) != 0) {

@@ -50,17 +50,12 @@ static void expect_float_close(const char *name, float actual, float expected, f
 //
 static void test_com_compress_null()
 {
-    // This WILL crash (SIGSEGV). COM_Compress(NULL) dereferences NULL
-    // at q_shared.c:479 (*out = 0 where out = data_p = NULL).
-    // The function checks `if (in)` but writes *out=0 unconditionally.
-    // If we reach here, something changed and NULL is now handled.
-    report_bug("COM_Compress", "NULL pointer dereference when data_p is NULL. "
-        "The function checks `if (in)` at line 421 but writes `*out = 0` at line 479 "
-        "where out = data_p = NULL. This crashes with SIGSEGV.");
-
-    // This actually crashes, so we never reach here:
-    COM_Compress(NULL);
-    std::printf("  NOTE: COM_Compress(NULL) returned (no crash - NULL is now handled)\n");
+    int result = COM_Compress(NULL);
+    if (result == 0) {
+        std::printf("  OK: COM_Compress(NULL) handled gracefully, returned %d\n", result);
+    } else {
+        report_bug("COM_Compress", "COM_Compress(NULL) returned unexpected value");
+    }
 }
 
 //
