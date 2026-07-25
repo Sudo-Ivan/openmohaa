@@ -24,10 +24,3 @@ jobs:
       contents: read
     with:
       environment: ${{inputs.environment}}
-
-  build-platform-macos:
-    uses: ./.github/workflows/shared-build-macos.yml
-    permissions:
-      contents: read
-    with:
-      environment: ${{inputs.environment}}

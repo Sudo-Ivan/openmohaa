@@ -63,7 +63,6 @@ jobs:
           'windows-x64-pdb',
           'windows-x86-pdb',
           'windows-arm64-pdb',
-          'macos-multiarch-arm64-x86_64',
         ]
 
     runs-on: ubuntu-24.04
