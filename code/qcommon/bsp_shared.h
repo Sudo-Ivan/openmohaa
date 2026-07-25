@@ -24,7 +24,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "q_shared.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void        Com_BspSharedSet(const byte *data, int length);
 void        Com_BspSharedClear(void);
 const byte *Com_BspSharedData(void);
 int         Com_BspSharedLength(void);
+
+#ifdef __cplusplus
+}
+#endif
