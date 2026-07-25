@@ -10717,6 +10717,12 @@ Vector Actor::GunTarget(bool bNoCollision, const vec3_t position, const vec3_t f
         scatterMult = aifSupressScatter->value;
     }
 
+    // Reduce scatter occasionally to simulate "lucky" accurate shots
+    float aimSettle = G_Random(1.0f);
+    if (aimSettle < 0.1f) {
+        scatterMult *= 0.5f;
+    }
+
     Vector error(0, 0, 0);
 
     fAccuracy = (1.0 - fCoverFactor) * 2 * scatterMult;
