@@ -764,6 +764,8 @@ void CVAR_Init(void)
     g_autoRecordStats  = gi.Cvar_Get("g_autoRecordStats", "0", 0);
     sv_autoRestart     = gi.Cvar_Get("sv_autoRestart", "0", 0);
     g_maxScore         = gi.Cvar_Get("g_maxScore", "0", 0);
+    g_bot_skill        = gi.Cvar_Get("g_bot_skill", "3", CVAR_ARCHIVE);
+    g_bot_flanking     = gi.Cvar_Get("g_bot_flanking", "1", 0);
 
     cl_running = gi.Cvar_Get("cl_running", "", 0);
 }

@@ -77,6 +77,8 @@ BotController::BotController()
     m_iNextTauntTime = 0;
 
     m_StateFlags = 0;
+
+    ApplySkillProfile();
 }
 
 BotController::~BotController()
@@ -92,6 +94,66 @@ BotController::~BotController()
 BotMovement& BotController::GetMovement()
 {
     return movement;
+}
+
+void BotController::ApplySkillProfile()
+{
+    int skill = g_bot_skill ? g_bot_skill->integer : 3;
+    if (skill < 1) skill = 1;
+    if (skill > 5) skill = 5;
+
+    switch (skill) {
+    case 1: // Easy
+        gi.cvar_set("g_bot_attack_react_min_delay", "0.8");
+        gi.cvar_set("g_bot_attack_react_random_delay", "2.0");
+        gi.cvar_set("g_bot_attack_spreadmult", "3.0");
+        gi.cvar_set("g_bot_turn_speed", "8");
+        gi.cvar_set("g_bot_attack_burst_min_time", "0.05");
+        gi.cvar_set("g_bot_attack_burst_random_delay", "0.2");
+        gi.cvar_set("g_bot_attack_continuousfire_min_firetime", "0.2");
+        gi.cvar_set("g_bot_attack_continuousfire_random_firetime", "0.5");
+        break;
+    case 2: // Below Average
+        gi.cvar_set("g_bot_attack_react_min_delay", "0.5");
+        gi.cvar_set("g_bot_attack_react_random_delay", "1.5");
+        gi.cvar_set("g_bot_attack_spreadmult", "2.0");
+        gi.cvar_set("g_bot_turn_speed", "10");
+        gi.cvar_set("g_bot_attack_burst_min_time", "0.08");
+        gi.cvar_set("g_bot_attack_burst_random_delay", "0.3");
+        gi.cvar_set("g_bot_attack_continuousfire_min_firetime", "0.3");
+        gi.cvar_set("g_bot_attack_continuousfire_random_firetime", "0.8");
+        break;
+    case 3: // Average (default)
+        gi.cvar_set("g_bot_attack_react_min_delay", "0.2");
+        gi.cvar_set("g_bot_attack_react_random_delay", "1.2");
+        gi.cvar_set("g_bot_attack_spreadmult", "1.0");
+        gi.cvar_set("g_bot_turn_speed", "15");
+        gi.cvar_set("g_bot_attack_burst_min_time", "0.1");
+        gi.cvar_set("g_bot_attack_burst_random_delay", "0.5");
+        gi.cvar_set("g_bot_attack_continuousfire_min_firetime", "0.5");
+        gi.cvar_set("g_bot_attack_continuousfire_random_firetime", "1.5");
+        break;
+    case 4: // Above Average
+        gi.cvar_set("g_bot_attack_react_min_delay", "0.1");
+        gi.cvar_set("g_bot_attack_react_random_delay", "0.8");
+        gi.cvar_set("g_bot_attack_spreadmult", "0.5");
+        gi.cvar_set("g_bot_turn_speed", "20");
+        gi.cvar_set("g_bot_attack_burst_min_time", "0.15");
+        gi.cvar_set("g_bot_attack_burst_random_delay", "0.6");
+        gi.cvar_set("g_bot_attack_continuousfire_min_firetime", "0.8");
+        gi.cvar_set("g_bot_attack_continuousfire_random_firetime", "2.0");
+        break;
+    case 5: // Hard
+        gi.cvar_set("g_bot_attack_react_min_delay", "0.05");
+        gi.cvar_set("g_bot_attack_react_random_delay", "0.3");
+        gi.cvar_set("g_bot_attack_spreadmult", "0.2");
+        gi.cvar_set("g_bot_turn_speed", "30");
+        gi.cvar_set("g_bot_attack_burst_min_time", "0.2");
+        gi.cvar_set("g_bot_attack_burst_random_delay", "0.8");
+        gi.cvar_set("g_bot_attack_continuousfire_min_firetime", "1.0");
+        gi.cvar_set("g_bot_attack_continuousfire_random_firetime", "3.0");
+        break;
+    }
 }
 
 void BotController::Init(void)
@@ -1118,6 +1180,12 @@ Weapon *BotController::FindWeaponWithAmmo()
     bestweapon = NULL;
     bestrank   = -999999;
 
+    // Determine engagement distance for weapon preference
+    float distToEnemy = 8192.0f;
+    if (m_pEnemy) {
+        distToEnemy = (m_pEnemy->origin - controlledEnt->origin).length();
+    }
+
     for (j = 1; j <= n; j++) {
         next = (Weapon *)G_GetEntity(inventory.ObjectAt(j));
 
@@ -1130,7 +1198,25 @@ Weapon *BotController::FindWeaponWithAmmo()
             continue;
         }
 
-        if (next->GetRank() < bestrank) {
+        int rank = next->GetRank();
+
+        // Distance-based preference: prefer close-range weapons up close, long-range at distance
+        int weaponClass = next->GetWeaponClass();
+        if (weaponClass & WEAPON_CLASS_HEAVY) {
+            // Heavy weapons (snipers, etc.) less effective close up
+            if (distToEnemy < 1024) rank -= 100;
+        } else if (weaponClass & WEAPON_CLASS_MG) {
+            // MGs lose effectiveness at extreme range
+            if (distToEnemy > 3072) rank -= 50;
+        } else if (weaponClass & WEAPON_CLASS_SMG) {
+            // SMGs work at close-mid range
+            if (distToEnemy > 2048) rank -= 75;
+        } else if (weaponClass & WEAPON_CLASS_RIFLE) {
+            // Rifles work at all ranges
+            if (distToEnemy > 4096) rank -= 25;
+        }
+
+        if (rank < bestrank) {
             continue;
         }
 
@@ -1139,7 +1225,7 @@ Weapon *BotController::FindWeaponWithAmmo()
         }
 
         bestweapon = (Weapon *)next;
-        bestrank   = bestweapon->GetRank();
+        bestrank   = rank;
     }
 
     return bestweapon;

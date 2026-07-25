@@ -374,6 +374,8 @@ extern cvar_t *g_teamlock;
 extern cvar_t *g_autoRecordStats;
 extern cvar_t *sv_autoRestart;
 extern cvar_t *g_maxScore;
+extern cvar_t *g_bot_skill;
+extern cvar_t *g_bot_flanking;
 
 void CVAR_Init(void);
 

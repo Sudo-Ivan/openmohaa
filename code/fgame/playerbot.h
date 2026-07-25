@@ -205,6 +205,7 @@ private:
     DelegateHandle delegateHandle_spawned;
 
 private:
+    void    ApplySkillProfile(void);
     Weapon *FindWeaponWithAmmo(void);
     Weapon *FindMeleeWeapon(void);
     void    UseWeaponWithAmmo(void);

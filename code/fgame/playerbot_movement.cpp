@@ -247,6 +247,29 @@ void BotMovement::MoveThink(usercmd_t& botcmd)
     if (!m_bJump) {
         CheckJumpOverEdge(botcmd);
     }
+
+    // Team separation: push away from nearby teammates
+    if (g_bot_flanking && g_bot_flanking->integer && g_gametype->integer >= GT_TEAM) {
+        gentity_t *e;
+        for (int i = 0; i < game.maxclients; i++) {
+            e = &g_entities[i];
+            if (!e->inuse || !e->entity || !e->client || e == controlledEntity->edict) continue;
+            if (!(e->r.svFlags & SVF_BOT)) continue;
+            Player *other = (Player *)e->entity;
+            if (other->GetTeam() != controlledEntity->GetTeam()) continue;
+            Vector delta = controlledEntity->origin - other->origin;
+            float dist = delta.length();
+            if (dist < 96.0f && dist > 0.1f) {
+                delta.normalize();
+                // Push away from nearby teammate
+                float strength = (96.0f - dist) / 96.0f;
+                int fwd = botcmd.forwardmove + (int)(delta.x * strength * 60);
+                int rig = botcmd.rightmove + (int)(-delta.y * strength * 60);
+                botcmd.forwardmove = (signed char)Q_clamp(fwd, -127, 127);
+                botcmd.rightmove   = (signed char)Q_clamp(rig, -127, 127);
+            }
+        }
+    }
 }
 
 Vector BotMovement::CalculateDir(const Vector& delta) const
