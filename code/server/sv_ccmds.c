@@ -2660,6 +2660,17 @@ SV_CheckSaveGame
 void SV_CheckSaveGame(void)
 {
 #ifndef DEDICATED
+	static qboolean bFlushSavegame = qfalse;
+
+	// Process deferred save completion (compression + disk write)
+	if (bFlushSavegame) {
+		if (!ge->IsSavePending()) {
+			bFlushSavegame = qfalse;
+			UI_SetupFiles();
+		}
+		return;
+	}
+
 	if (!SV_DoSaveGame()) {
 		return;
 	}
@@ -2667,7 +2678,7 @@ void SV_CheckSaveGame(void)
 	if (cl.serverTime >= svs.time) {
 		bSavegame = qfalse;
 		SV_SaveGame(savegame_name[0] ? savegame_name : NULL, qfalse);
-		UI_SetupFiles();
+		bFlushSavegame = qtrue;
 	}
 #endif
 }

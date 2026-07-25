@@ -467,6 +467,35 @@ void G_AddGEntity(gentity_t *edict, qboolean showentnums)
 
 /*
 ================
+ProcessDeferredSave
+
+Processes deferred save operations across frames so the game
+does not freeze during LZ77 compression and disk writes.
+Phases: 0 = compress, 1 = write to disk.
+================
+*/
+static void ProcessDeferredSave(void)
+{
+    static int deferredPhase = 0;
+
+    if (!g_deferredSavePending) {
+        deferredPhase = 0;
+        return;
+    }
+
+    if (deferredPhase == 0) {
+        DeferredSave_Flush(0);
+        deferredPhase = 1;
+    } else if (deferredPhase == 1) {
+        if (DeferredSave_Flush(1)) {
+            deferredPhase = 0;
+            gi.Printf(HUD_MESSAGE_YELLOW "%s\n", gi.LV_ConvertString("Game Saved"));
+        }
+    }
+}
+
+/*
+================
 G_RunFrame
 
 Advances the non-player objects in the world
@@ -483,6 +512,8 @@ void G_RunFrame(int levelTime, int frameTime)
     static int         processedFrameID         = 0;
 
     try {
+        ProcessDeferredSave();
+
         g_iInThinks = 0;
 
         if (g_showmem->integer) {
@@ -1587,8 +1618,7 @@ qboolean G_ArchiveLevel(
             LoadingSavegame = false;
             gi.Printf(HUD_MESSAGE_YELLOW "%s\n", gi.LV_ConvertString("Game Loaded"));
         } else {
-            arc.Close();
-            gi.Printf(HUD_MESSAGE_YELLOW "%s\n", gi.LV_ConvertString("Game Saved"));
+            arc.CloseDeferred();
         }
 
         return qtrue;
@@ -1639,6 +1669,19 @@ qboolean G_ReadLevel(const char *filename, byte **savedCgameState, size_t *saved
         LoadingServer   = false;
     }
     return status;
+}
+
+/*
+================
+G_IsSavePending
+
+Returns qtrue if a deferred save buffer is still pending (not yet flushed to disk).
+Used by the server to know when to call UI_SetupFiles.
+================
+*/
+qboolean G_IsSavePending(void)
+{
+    return g_deferredSavePending;
 }
 
 /*
@@ -1716,6 +1759,8 @@ extern "C" game_export_t *GetGameAPI(game_import_t *import)
 
     globals.GetNumSimulatedPlayers   = G_GetNumBots;
     globals.GetSimulatedPlayersSkill = G_GetBotSkill;
+
+    globals.IsSavePending = G_IsSavePending;
 
     return &globals;
 }

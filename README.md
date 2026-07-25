@@ -28,6 +28,7 @@ Powered by [ioquake3](https://github.com/ioquake/ioq3) and the [F.A.K.K SDK](htt
 - fix(net): harden OOB connect path and add netsec tests `68a1c349`
 - test: add oracle, smoke, acceptance, and adversarial tests `51477368`
 - test: add adversarial tests that found 4 engine bugs `7b822f67`
+- fix(fgame): defer LZ77 compression and disk writes across frames to prevent save game freeze
 - Added `workflow_dispatch` manual trigger to all GitHub Actions workflows
 - Fixed Node 20 deprecation and pinned all actions to full commit SHAs
 - Restructured release workflows

@@ -80,6 +80,7 @@ public:
     qboolean    OpenWrite(const char *name);
     qboolean    Read(void *dest, size_t size);
     qboolean    Write(const void *source, size_t size);
+    byte       *DetachBuffer();
 };
 
 class Archiver
@@ -114,6 +115,7 @@ public:
     ~Archiver();
     void FileError(const char *fmt, ...);
     void Close(void);
+    void CloseDeferred(void);
 
     qboolean Read(str& name, qboolean harderror = qtrue);
     qboolean Read(const char *name, qboolean harderror = qtrue);
@@ -348,3 +350,17 @@ void con_map<key, value>::Archive(Archiver& arc)
         arc.ArchiveInteger(&tempInt); \
         (thing) = (type)tempInt;      \
     }
+
+//
+// Deferred save support - allows save to complete across multiple frames
+// to avoid freezing the game during disk I/O and LZ77 compression.
+//
+#define MAX_DEFERRED_SAVE_FILENAME 256
+
+extern byte   *g_deferredSaveBuffer;   // compressed save buffer awaiting disk write
+extern size_t  g_deferredSaveLength;   // length of compressed buffer
+extern char    g_deferredSaveFilename[MAX_DEFERRED_SAVE_FILENAME]; // filename to write to
+extern qboolean g_deferredSavePending; // qtrue if a deferred save buffer is pending
+
+qboolean DeferredSave_Flush(int phase); // process one phase: 0=compress, 1=write, returns qtrue when done
+void DeferredSave_Cancel(void);        // free buffer without writing

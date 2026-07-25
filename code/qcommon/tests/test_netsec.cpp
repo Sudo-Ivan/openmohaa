@@ -130,6 +130,90 @@ static void test_huffman_claimed_oversize()
 	}
 }
 
+//
+// Verify Huffman internal arrays don't overflow with all 256 byte values.
+// Each unique symbol consumes 2 nodeList entries + may call get_ppnode
+// multiple times. nodeList[768] and nodePtrs[768] must not overflow.
+//
+//
+// Test that Huffman internal arrays don't overflow even in worst-case
+// weight distribution: one symbol with very high weight, then 255 others.
+//
+static void test_huffman_oob_overflow()
+{
+	huff_t huff;
+	int i, j;
+	int maxBlocNode = 0, maxBlocPtrs = 0;
+
+	// Test 1: all 256 unique byte values
+	Com_Memset(&huff, 0, sizeof(huff));
+	huff.tree = huff.lhead = huff.ltail = huff.loc[NYT] = &(huff.nodeList[huff.blocNode++]);
+	huff.tree->symbol = NYT;
+	huff.tree->weight = 0;
+	huff.lhead->next = huff.lhead->prev = NULL;
+	huff.tree->parent = huff.tree->left = huff.tree->right = NULL;
+
+	for (i = 0; i < 256; i++) {
+		Huff_addRef(&huff, (byte)i);
+	}
+	maxBlocNode = huff.blocNode > maxBlocNode ? huff.blocNode : maxBlocNode;
+	maxBlocPtrs = huff.blocPtrs > maxBlocPtrs ? huff.blocPtrs : maxBlocPtrs;
+
+	// Test 2: one heavy symbol + all others
+	Com_Memset(&huff, 0, sizeof(huff));
+	huff.tree = huff.lhead = huff.ltail = huff.loc[NYT] = &(huff.nodeList[huff.blocNode++]);
+	huff.tree->symbol = NYT;
+	huff.tree->weight = 0;
+	huff.lhead->next = huff.lhead->prev = NULL;
+	huff.tree->parent = huff.tree->left = huff.tree->right = NULL;
+
+	// Insert heavy symbol many times
+	for (j = 0; j < 200; j++) {
+		Huff_addRef(&huff, (byte)0xFF);
+	}
+	// Then insert all other symbols once
+	for (i = 0; i < 255; i++) {
+		Huff_addRef(&huff, (byte)i);
+	}
+	maxBlocNode = huff.blocNode > maxBlocNode ? huff.blocNode : maxBlocNode;
+	maxBlocPtrs = huff.blocPtrs > maxBlocPtrs ? huff.blocPtrs : maxBlocPtrs;
+
+	// Test 3: inverse heavy distribution
+	Com_Memset(&huff, 0, sizeof(huff));
+	huff.tree = huff.lhead = huff.ltail = huff.loc[NYT] = &(huff.nodeList[huff.blocNode++]);
+	huff.tree->symbol = NYT;
+	huff.tree->weight = 0;
+	huff.lhead->next = huff.lhead->prev = NULL;
+	huff.tree->parent = huff.tree->left = huff.tree->right = NULL;
+
+	// Insert all light symbols first, then heavy
+	for (i = 0; i < 255; i++) {
+		Huff_addRef(&huff, (byte)i);
+	}
+	for (j = 0; j < 200; j++) {
+		Huff_addRef(&huff, (byte)0xFF);
+	}
+	maxBlocNode = huff.blocNode > maxBlocNode ? huff.blocNode : maxBlocNode;
+	maxBlocPtrs = huff.blocPtrs > maxBlocPtrs ? huff.blocPtrs : maxBlocPtrs;
+
+	// Check for overflow
+	if (maxBlocNode > 768) {
+		std::fprintf(stderr,
+			"FAIL: Huffman nodeList overflow! blocNode=%d > 768\n", maxBlocNode);
+		failures++;
+	} else {
+		std::printf("  max nodeList usage: %d/768\n", maxBlocNode);
+	}
+
+	if (maxBlocPtrs > 768) {
+		std::fprintf(stderr,
+			"FAIL: Huffman nodePtrs overflow! blocPtrs=%d > 768\n", maxBlocPtrs);
+		failures++;
+	} else {
+		std::printf("  max nodePtrs usage: %d/768\n", maxBlocPtrs);
+	}
+}
+
 int main()
 {
 	failures = 0;
@@ -138,6 +222,7 @@ int main()
 	test_huffman_truncated_connect();
 	test_huffman_roundtrip();
 	test_huffman_claimed_oversize();
+	test_huffman_oob_overflow();
 
 	if (failures) {
 		std::fprintf(stderr, "%d netsec test(s) failed\n", failures);
