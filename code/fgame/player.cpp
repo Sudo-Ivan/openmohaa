@@ -4333,6 +4333,14 @@ void Player::ClientInactivityTimer(void)
         return;
     }
 
+    if (g_inactiveExempt && g_inactiveExempt->string[0]) {
+        const char *playerIP = Info_ValueForKey(client->pers.userinfo, "ip");
+        if (strstr(g_inactiveExempt->string, playerIP)) {
+            client->lastActiveTime = level.inttime;
+            return;
+        }
+    }
+
     if (g_inactivekick->integer && client->lastActiveTime < level.inttime - 1000 * g_inactivekick->integer) {
         const char *s = Info_ValueForKey(client->pers.userinfo, "ip");
 
@@ -9781,7 +9789,29 @@ void Player::ArmorDamage(Event *ev)
 
     m_iNumHitsTaken++;
 
+    if (g_friendlyFireScale && g_friendlyFireScale->value != 1.0f
+        && g_gametype->integer >= GT_TEAM && mod != MOD_TELEFRAG) {
+        Entity *ent = ev->GetEntity(1);
+        if (ent && ent != this && ent->IsSubclassOfPlayer()) {
+            Player *p = (Player *)ent;
+            if (p->GetDM_Team() == GetDM_Team()) {
+                Event *scaled = new Event(EV_Damage);
+                scaled->AddEntity(ev->GetEntity(1));
+                scaled->AddFloat(ev->GetFloat(2) * g_friendlyFireScale->value);
+                for (int i = 3; i <= 10; i++) {
+                    scaled->AddValue(ev->GetValue(i));
+                }
+                scaled->AddEntity(this);
+                Sentient::ArmorDamage(scaled);
+                delete scaled;
+                goto done;
+            }
+        }
+    }
+
     Sentient::ArmorDamage(ev);
+
+done:
 
     Event *event = new Event(0, 11);
 

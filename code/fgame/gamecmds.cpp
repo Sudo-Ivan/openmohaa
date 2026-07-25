@@ -180,6 +180,18 @@ qboolean G_ProcessClientCommand(gentity_t *ent)
 
     cmd = gi.Argv(0);
 
+    if (sv_disableConsoleCommands && sv_disableConsoleCommands->string[0]) {
+        const char *disabled = sv_disableConsoleCommands->string;
+        const char *found = strstr(disabled, cmd);
+        if (found) {
+            int matchLen = (int)strlen(cmd);
+            if ((found == disabled || found[-1] == ',') &&
+                (found[matchLen] == '\0' || found[matchLen] == ',')) {
+                return qfalse;
+            }
+        }
+    }
+
     player                = (Player *)ent->entity;
     player->m_lastcommand = cmd;
 

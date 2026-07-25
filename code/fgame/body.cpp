@@ -43,7 +43,8 @@ Body::Body()
     setContents(CONTENTS_CORPSE);
     setMoveType(MOVETYPE_NONE);
 
-    PostEvent(EV_DeathSinkStart, 5.0f);
+    float ragdollTime = g_ragdollTime ? g_ragdollTime->value : 5.0f;
+    PostEvent(EV_DeathSinkStart, ragdollTime);
 }
 
 void Body::Damage(Event *ev)

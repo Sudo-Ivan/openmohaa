@@ -358,6 +358,13 @@ extern cvar_t *g_door_reopen_blocked;
 extern cvar_t *g_motd;
 extern cvar_t *g_disabledWeapons;
 extern cvar_t *g_voteTimeout;
+extern cvar_t *sv_disableConsoleCommands;
+extern cvar_t *g_friendlyFireScale;
+extern cvar_t *g_ragdollTime;
+extern cvar_t *g_inactiveExempt;
+extern cvar_t *sv_announce;
+extern cvar_t *sv_announceInterval;
+extern cvar_t *g_teamSwapHalftime;
 
 void CVAR_Init(void);
 

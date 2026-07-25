@@ -14,6 +14,7 @@ Powered by [ioquake3](https://github.com/ioquake/ioq3) and the [F.A.K.K SDK](htt
 
 ## Our changes
 
+- feat: add `sv_disableConsoleCommands`, `g_friendlyFireScale`, `sv_announce`, `g_inactiveExempt`, `g_ragdollTime`, `g_teamSwapHalftime`
 - feat: add MOTD cvar (`g_motd`), round end logging, `mapname.cfg` auto-exec, `g_disabledWeapons`, `g_voteTimeout`
 - fix(client): round `com_maxfps` division for accurate FPS capping (#530) `f1177a69`
 - fix(fgame): use `icmp` not `icmpn` in `WaitForState` for exact state match (#702) `f1177a69`

@@ -680,6 +680,17 @@ void G_RunFrame(int levelTime, int frameTime)
             level.CheckVote();
         }
 
+        if (sv_announce && sv_announce->string[0] && sv_announceInterval && sv_announceInterval->value > 0.0f) {
+            static int lastAnnounceTime = 0;
+            if (!lastAnnounceTime || level.inttime < lastAnnounceTime) {
+                lastAnnounceTime = level.inttime;
+            }
+            if (level.inttime - lastAnnounceTime >= sv_announceInterval->value * 1000) {
+                lastAnnounceTime = level.inttime;
+                G_PrintToAllClients(va("%s\n", sv_announce->string));
+            }
+        }
+
         if (g_animdump->integer) {
             for (edict = active_edicts.next; edict != &active_edicts; edict = edict->next) {
                 Animate *anim = (Animate *)edict->entity;

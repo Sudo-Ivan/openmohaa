@@ -58,6 +58,10 @@ In round and objective matches, this is the maximum time at which a player can j
 
 Automatically reopens the door from the opposite side when blocked. Defaults to `1`.
 
+### `g_friendlyFireScale`
+
+Multiplier for friendly fire damage. Values below `1.0` reduce team damage, values above increase it. Defaults to `1.0` (no scaling).
+
 ### `g_disabledWeapons`
 
 A comma-separated list of weapon class names or model paths to block from being given to players. When a weapon on this list is given (via spawn, script, or pickup), it is silently denied. Defaults to `""` (all weapons allowed).
@@ -84,6 +88,10 @@ The game mode to use. The following values are accepted:
 - `0`: Players don't drop an health pack when killed
 - `1` (the default): Players drop an health pack when killed
 
+### `g_inactiveExempt`
+
+A comma-separated list of IP addresses exempt from inactivity kick/spectate. Defaults to `""` (no exemptions).
+
 ### `g_inactivekick`
 
 The time in second after which an inactive player gets kicked. Defaults to `900`
@@ -109,6 +117,14 @@ This prevents some tricks such as `ghost walking` where a player rapidly switch 
 ### `g_playerStacking`
 
 If enabled, a player can stand on another player's head without being pushed off. Defaults to `0`.
+
+### `g_ragdollTime`
+
+The time in seconds before dead body ragdolls are removed. Defaults to `5`.
+
+### `g_teamSwapHalftime`
+
+If set to `1`, players are swapped to the opposite team at each round transition. Defaults to `0` (disabled).
 
 ### `g_teamdamage`
 
@@ -193,6 +209,18 @@ Minimum ping to allow clients to join with. `0` no minimum (the default).
 ### `sv_minRate`
 
 Minimum rate at which clients receive data. `0` means no minimum (the default).
+
+### `sv_announce`
+
+The message text broadcast periodically to all players. Set to `""` (default) to disable.
+
+### `sv_announceInterval`
+
+The interval in seconds between announce broadcasts. Defaults to `120` (2 minutes).
+
+### `sv_disableConsoleCommands`
+
+A comma-separated list of console commands to block for players (e.g. `"god,noclip,give"`). Defaults to `""` (no restrictions).
 
 ### `sv_privateClients`
 

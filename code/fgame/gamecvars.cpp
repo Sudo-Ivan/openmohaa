@@ -323,6 +323,13 @@ cvar_t *g_door_reopen_blocked;
 cvar_t *g_motd;
 cvar_t *g_disabledWeapons;
 cvar_t *g_voteTimeout;
+cvar_t *sv_disableConsoleCommands;
+cvar_t *g_friendlyFireScale;
+cvar_t *g_ragdollTime;
+cvar_t *g_inactiveExempt;
+cvar_t *sv_announce;
+cvar_t *sv_announceInterval;
+cvar_t *g_teamSwapHalftime;
 
 void CVAR_Init(void)
 {
@@ -732,6 +739,13 @@ void CVAR_Init(void)
     g_motd             = gi.Cvar_Get("g_motd", "", 0);
     g_disabledWeapons  = gi.Cvar_Get("g_disabledWeapons", "", 0);
     g_voteTimeout      = gi.Cvar_Get("g_voteTimeout", "30", 0);
+    sv_disableConsoleCommands = gi.Cvar_Get("sv_disableConsoleCommands", "", 0);
+    g_friendlyFireScale = gi.Cvar_Get("g_friendlyFireScale", "1.0", 0);
+    g_ragdollTime      = gi.Cvar_Get("g_ragdollTime", "5", 0);
+    g_inactiveExempt   = gi.Cvar_Get("g_inactiveExempt", "", 0);
+    sv_announce        = gi.Cvar_Get("sv_announce", "", 0);
+    sv_announceInterval = gi.Cvar_Get("sv_announceInterval", "120", 0);
+    g_teamSwapHalftime = gi.Cvar_Get("g_teamSwapHalftime", "0", 0);
 
     cl_running = gi.Cvar_Get("cl_running", "", 0);
 }

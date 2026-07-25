@@ -1515,6 +1515,15 @@ void DM_Manager::EventFinishRoundTransition(Event *ev)
 
         Player *p                   = (Player *)ent->entity;
         p->client->pers.round_kills = p->GetNumDeaths();
+
+        if (g_teamSwapHalftime && g_teamSwapHalftime->integer) {
+            teamtype_t curTeam = p->GetDM_Team();
+            if (curTeam == TEAM_ALLIES) {
+                JoinTeam(p, TEAM_AXIS);
+            } else if (curTeam == TEAM_AXIS) {
+                JoinTeam(p, TEAM_ALLIES);
+            }
+        }
     }
 
     if (g_gametype->integer == GT_TOW) {
