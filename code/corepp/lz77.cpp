@@ -23,7 +23,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // lz77.cpp: LZ77 Compression Algorithm
 
 #include "lz77.h"
-#include "../qcommon/qcommon.h"
+#include "../qcommon/q_shared.h"
+#include <chrono>
 #include <cstring>
 
 cLZ77 g_lz77;
@@ -312,18 +313,17 @@ int cLZ77::CompressContinue(size_t *out_len, int max_ms)
 {
     unsigned char *in;
     size_t         in_len;
-    int            start_ms;
     int            budget;
+    const auto     slice_start = std::chrono::steady_clock::now();
 
     if (!this->op || !this->m_inStart) {
         *out_len = 0;
         return 0;
     }
 
-    in       = this->m_inStart;
-    in_len   = (size_t)(this->in_end - in);
-    start_ms = Sys_Milliseconds();
-    budget   = max_ms;
+    in     = this->m_inStart;
+    in_len = (size_t)(this->in_end - in);
+    budget = max_ms;
 
     if (in_len <= 13) {
         CompressTail(in_len, out_len);
@@ -334,9 +334,13 @@ int cLZ77::CompressContinue(size_t *out_len, int max_ms)
         bool match_found = false;
 
         while (this->ip < this->ip_end) {
-            if (budget > 0 && Sys_Milliseconds() - start_ms >= budget) {
-                *out_len = (size_t)(this->op - this->m_outStart);
-                return (int)(this->in_end - this->ii);
+            if (budget > 0) {
+                const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - slice_start);
+                if (elapsed.count() >= budget) {
+                    *out_len = (size_t)(this->op - this->m_outStart);
+                    return (int)(this->in_end - this->ii);
+                }
             }
 
             this->dindex =
