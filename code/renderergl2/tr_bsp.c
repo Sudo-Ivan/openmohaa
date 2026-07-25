@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 #include "tr_vis.h"
+#include "../qcommon/bsp_shared.h"
 
 #define JSON_IMPLEMENTATION
 #include "../qcommon/json.h"
@@ -3334,10 +3335,16 @@ void RE_LoadWorldMap( const char *name ) {
 
 	tr.worldMapLoaded = qtrue;
 
-	// load it
-    ri.FS_ReadFile( name, &buffer.v );
-	if ( !buffer.b ) {
-		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s not found", name);
+	if ( Com_BspSharedData() ) {
+		if ( Com_BspSharedLength() <= 0 ) {
+			ri.Error (ERR_DROP, "RE_LoadWorldMap: %s shared buffer is empty", name);
+		}
+		buffer.b = (byte *)Com_BspSharedData();
+	} else {
+		ri.FS_ReadFile( name, &buffer.v );
+		if ( !buffer.b ) {
+			ri.Error (ERR_DROP, "RE_LoadWorldMap: %s not found", name);
+		}
 	}
 
 	// clear tr.world so if the level fails to load, the next

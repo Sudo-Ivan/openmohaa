@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // tr_map.c
 
 #include "tr_local.h"
+#include "../qcommon/bsp_shared.h"
 #include "tr_vis.h"
 
 /*
@@ -2201,11 +2202,18 @@ int R_LoadLump(fileHandle_t handle, lump_t* lump, gamelump_t* glump, int size)
     if (lump->filelen) {
         glump->buffer = ri.Hunk_AllocateTempMemory(lump->filelen);
 
-        if (ri.FS_Seek(handle, lump->fileofs, FS_SEEK_SET) < 0) {
-            Com_Error(ERR_DROP, "R_LoadLump: Error seeking to lump.");
-        }
+        if (Com_BspSharedData()) {
+            if (lump->fileofs + lump->filelen > Com_BspSharedLength()) {
+                Com_Error(ERR_DROP, "R_LoadLump: lump extends past map buffer.");
+            }
+            Com_Memcpy(glump->buffer, Com_BspSharedData() + lump->fileofs, lump->filelen);
+        } else {
+            if (ri.FS_Seek(handle, lump->fileofs, FS_SEEK_SET) < 0) {
+                Com_Error(ERR_DROP, "R_LoadLump: Error seeking to lump.");
+            }
 
-        ri.FS_Read(glump->buffer, lump->filelen, handle);
+            ri.FS_Read(glump->buffer, lump->filelen, handle);
+        }
 
         if (size) {
             return lump->filelen / size;
@@ -2262,13 +2270,20 @@ void RE_LoadWorldMap( const char *name ) {
 
     tr.worldMapLoaded = qtrue;
 
-    // load it
-    length = ri.FS_OpenFile(name, &h, qtrue, qtrue);
-    if (length <= 0) {
-        ri.Error(ERR_DROP, "RE_LoadWorldMap: %s not found", name);
+    if (Com_BspSharedData()) {
+        if (Com_BspSharedLength() < (int)sizeof(dheader_t)) {
+            ri.Error(ERR_DROP, "RE_LoadWorldMap: %s shared buffer is too small", name);
+        }
+        length = Com_BspSharedLength();
+        h      = 0;
+        Com_Memcpy(&header, Com_BspSharedData(), sizeof(dheader_t));
+    } else {
+        length = ri.FS_OpenFile(name, &h, qtrue, qtrue);
+        if (length <= 0) {
+            ri.Error(ERR_DROP, "RE_LoadWorldMap: %s not found", name);
+        }
+        ri.FS_Read(&header, sizeof(dheader_t), h);
     }
-
-    ri.FS_Read(&header, sizeof(dheader_t), h);
 
     for (i=0 ; i<sizeof(dheader_t)/4 ; i++) {
         ((int *)&header)[i] = LittleLong ( ((int *)&header)[i]);
@@ -2432,7 +2447,9 @@ void RE_LoadWorldMap( const char *name ) {
     // only set tr.world now that we know the entire level has loaded properly
     tr.world = &s_worldData;
 
-    ri.FS_CloseFile(h);
+    if (h) {
+        ri.FS_CloseFile(h);
+    }
 
     ri.UI_LoadResource("*111");
     R_Sphere_InitLights();

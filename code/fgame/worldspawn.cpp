@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "g_phys.h"
 #include "worldspawn.h"
 #include "level.h"
+#include "sp_population.h"
 #include "scriptmaster.h"
 #include "scriptexception.h"
 #include "player.h"
@@ -599,6 +600,7 @@ World::World()
     UpdateSky();
 
     m_fAIVisionDistance = 2048.0f;
+    SpPopulation_ApplyWorld(this);
 
     level.cinematic = spawnflags & WORLD_CINEMATIC;
 

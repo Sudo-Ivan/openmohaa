@@ -23,9 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // lz77.cpp: LZ77 Compression Algorithm
 
 #include "lz77.h"
-#include "../qcommon/q_shared.h"
-
-#include <cstdio>
+#include "../qcommon/qcommon.h"
 #include <cstring>
 
 cLZ77 g_lz77;
@@ -41,7 +39,11 @@ static void copy_bytes(unsigned char *dest, unsigned char *from, size_t length)
     }
 }
 
-cLZ77::cLZ77() {}
+cLZ77::cLZ77()
+{
+    m_outStart = NULL;
+    m_inStart  = NULL;
+}
 
 unsigned int cLZ77::CompressData(unsigned char *in, size_t in_len, unsigned char *out, size_t *out_len)
 {
@@ -237,6 +239,232 @@ int cLZ77::Compress(unsigned char *in, size_t in_len, unsigned char *out, size_t
     *op++    = 0;
     *out_len = op - out;
 
+    return 0;
+}
+
+void cLZ77::CompressBegin(unsigned char *in, size_t in_len, unsigned char *out)
+{
+    this->m_inStart  = in;
+    this->m_outStart = out;
+    this->in_end     = &in[in_len];
+    this->ip_end     = &in[in_len - 13];
+    this->op         = out;
+    this->ip         = in;
+    this->ii         = this->ip;
+    if (in_len > 13) {
+        this->ip += 4;
+    }
+}
+
+void cLZ77::CompressTail(size_t in_len, size_t *out_len)
+{
+    unsigned char *out;
+    unsigned char *in;
+    unsigned char *op;
+    size_t         t;
+
+    in  = this->m_inStart;
+    out = this->m_outStart;
+    op  = this->op;
+    t   = (size_t)(this->in_end - this->ii);
+
+    if (in_len <= 13) {
+        t  = in_len;
+        op = out;
+    }
+
+    if (t) {
+        if (op == out && t <= 238) {
+            *op++ = (unsigned char)(t + 17);
+        } else if (t <= 3) {
+            *(op - 2) |= (unsigned char)t;
+        } else if (t <= 18) {
+            *op++ = (unsigned char)(t - 3);
+        } else {
+            unsigned int tt;
+
+            *op++ = 0;
+
+            tt = (unsigned int)(t - 18);
+            while (tt > 255) {
+                tt -= 255;
+                *op++ = 0;
+            }
+
+            *op++ = (unsigned char)tt;
+        }
+
+        copy_bytes(op, &in[in_len - t], t);
+        op += t;
+    }
+
+    *op++    = 17;
+    *op++    = 0;
+    *op++    = 0;
+    *out_len = (size_t)(op - out);
+}
+
+int cLZ77::CompressContinue(size_t *out_len, int max_ms)
+{
+    unsigned char *in;
+    size_t         in_len;
+    int            start_ms;
+    int            budget;
+
+    if (!this->op || !this->m_inStart) {
+        *out_len = 0;
+        return 0;
+    }
+
+    in       = this->m_inStart;
+    in_len   = (size_t)(this->in_end - in);
+    start_ms = Sys_Milliseconds();
+    budget   = max_ms;
+
+    if (in_len <= 13) {
+        CompressTail(in_len, out_len);
+        return 0;
+    }
+
+    while (this->ip < this->ip_end) {
+        bool match_found = false;
+
+        while (this->ip < this->ip_end) {
+            if (budget > 0 && Sys_Milliseconds() - start_ms >= budget) {
+                *out_len = (size_t)(this->op - this->m_outStart);
+                return (int)(this->in_end - this->ii);
+            }
+
+            this->dindex =
+                ((33 * (this->ip[0] ^ (32 * ((32 * ((this->ip[3] << 6) ^ this->ip[2])) ^ (unsigned int)this->ip[1]))))
+                 >> 5)
+                & 0x3FFF;
+            this->m_off = cLZ77::m_pDictionary[this->dindex];
+
+            if (this->ip - in <= this->m_off) {
+                cLZ77::m_pDictionary[this->dindex] = (unsigned int)(this->ip - in);
+                this->ip++;
+                continue;
+            }
+
+            this->m_off = (unsigned int)(this->ip - in - this->m_off);
+            if (this->m_off > 0xBFFF) {
+                cLZ77::m_pDictionary[this->dindex] = (unsigned int)(this->ip - in);
+                this->ip++;
+                continue;
+            }
+
+            this->m_pos = this->ip - this->m_off;
+
+            if (this->m_off <= 0x800 || (this->m_pos[3] == this->ip[3])) {
+                if (*this->m_pos == *this->ip && this->m_pos[1] == this->ip[1] && this->m_pos[2] == this->ip[2]) {
+                    match_found = true;
+                    break;
+                }
+            }
+
+            this->dindex = (this->dindex & 0x7FF) ^ 0x201F;
+            this->m_off  = cLZ77::m_pDictionary[this->dindex];
+
+            if (this->ip - in <= this->m_off) {
+                cLZ77::m_pDictionary[this->dindex] = (unsigned int)(this->ip - in);
+                this->ip++;
+                continue;
+            }
+
+            this->m_off = (unsigned int)(this->ip - in - this->m_off);
+            if (this->m_off > 0xBFFF) {
+                cLZ77::m_pDictionary[this->dindex] = (unsigned int)(this->ip - in);
+                this->ip++;
+                continue;
+            }
+
+            this->m_pos = this->ip - this->m_off;
+
+            if (this->m_off <= 0x800 || (this->m_pos[3] == this->ip[3])) {
+                if (this->m_pos[0] == this->ip[0] && this->m_pos[1] == this->ip[1] && this->m_pos[2] == this->ip[2]) {
+                    match_found = true;
+                    break;
+                }
+            }
+
+            cLZ77::m_pDictionary[this->dindex] = (unsigned int)(this->ip - in);
+            this->ip++;
+        }
+
+        if (!match_found) {
+            break;
+        }
+
+        cLZ77::m_pDictionary[this->dindex] = (unsigned int)(this->ip - in);
+
+        unsigned int t = (unsigned int)(this->ip - this->ii);
+        if (t > 0) {
+            if (t <= 3) {
+                *(this->op - 2) |= (unsigned char)t;
+            } else if (t <= 18) {
+                *this->op++ = (unsigned char)(t - 3);
+            } else {
+                unsigned int tt = t - 18;
+
+                *this->op++ = 0;
+                while (tt > 255) {
+                    tt -= 255;
+                    *this->op++ = 0;
+                }
+                *this->op++ = (unsigned char)tt;
+            }
+
+            copy_bytes(this->op, this->ii, t);
+            this->ii += t;
+            this->op += t;
+        }
+
+        this->ip += 3;
+
+        for (t = 0; this->ip < this->in_end; t++, this->ip++) {
+            if (this->m_pos[t + 3] != *this->ip) {
+                break;
+            }
+        }
+
+        this->m_len = (unsigned int)(this->ip - this->ii);
+
+        if (this->m_off > 0x4000) {
+            this->m_off -= 0x4000;
+            if (this->m_len > 9) {
+                this->m_len -= 9;
+                *this->op++ = (unsigned char)(((this->m_off & 0x4000) >> 11) | 0x10);
+                while (this->m_len > 0xFF) {
+                    this->m_len -= 255;
+                    *this->op++ = 0;
+                }
+                *this->op++ = (unsigned char)this->m_len;
+            } else {
+                *this->op++ =
+                    (unsigned char)(((this->m_off & 0x4000) >> 11) | ((this->m_len & 0xFF) - 2) | 0x10);
+            }
+        } else {
+            --this->m_off;
+            if (this->m_len > 33) {
+                this->m_len -= 33;
+                *this->op++ = 32;
+                while (this->m_len > 255) {
+                    this->m_len -= 255;
+                    *this->op++ = 0;
+                }
+                *this->op++ = (unsigned char)this->m_len;
+            } else {
+                *this->op++ = (unsigned char)(((this->m_len & 0xFF) - 2) | 0x20);
+            }
+        }
+
+        *this->op++ = (unsigned char)(4 * (this->m_off & 63));
+        *this->op++ = (unsigned char)(this->m_off >> 6);
+        this->ii    = this->ip;
+    }
+
+    CompressTail(in_len, out_len);
     return 0;
 }
 

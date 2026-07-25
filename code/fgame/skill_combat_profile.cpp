@@ -42,6 +42,149 @@ static const char *SkillCombatProfile_SkillName(int skillIndex)
     }
 }
 
+typedef struct mapSkillPreset_s {
+    const char *prefix;
+    float       accuracyExtra;
+    float       noticeExtra;
+} mapSkillPreset_t;
+
+static const skillCombatProfile_t skillProfiles[3] = {
+    {1.20f, 0.85f, 0.75f, 0.80f, 0.70f, 1.35f, 1.10f, 0.15f, 0.10f, 1.15f},
+    {1.00f, 1.00f, 1.00f, 1.00f, 1.00f, 1.00f, 0.75f, 0.35f, 0.25f, 1.00f},
+    {0.55f, 1.35f, 1.45f, 1.40f, 1.35f, 0.65f, 0.35f, 0.70f, 0.55f, 0.80f},
+};
+
+static const mapSkillPreset_t mapPresetsDefault[] = {
+    {"m1l1", 1.10f, 1.05f},
+    {"m1l2", 1.10f, 1.05f},
+    {"m2l1", 1.15f, 1.10f},
+    {"m2l2", 1.15f, 1.10f},
+    {"m3l1", 1.20f, 1.15f},
+    {"m3l2", 1.20f, 1.15f},
+    {"m4l1", 1.20f, 1.15f},
+    {"m4l2", 1.25f, 1.20f},
+    {"m5l1", 1.25f, 1.20f},
+    {"m5l2", 1.25f, 1.20f},
+    {"m6l1", 1.30f, 1.25f},
+    {"m6l2", 1.30f, 1.25f},
+    {"m6l3", 1.30f, 1.25f},
+    {"libya", 1.15f, 1.10f},
+    {"sicily", 1.20f, 1.15f},
+    {"norway", 1.20f, 1.15f},
+    {"m1l1b", 1.15f, 1.10f},
+    {"m2l1b", 1.20f, 1.15f},
+    {"m3l1b", 1.20f, 1.15f},
+    {NULL, 1.0f, 1.0f},
+};
+
+#define MAX_MAP_SKILL_PRESETS 128
+
+static mapSkillPreset_t g_mapPresets[MAX_MAP_SKILL_PRESETS];
+static int              g_numMapPresets;
+
+static void SkillCombatProfile_AddPreset(const char *prefix, float accuracyExtra, float noticeExtra)
+{
+    int i;
+
+    if (!prefix || !prefix[0]) {
+        return;
+    }
+
+    for (i = 0; i < g_numMapPresets; i++) {
+        if (!Q_stricmp(g_mapPresets[i].prefix, prefix)) {
+            g_mapPresets[i].accuracyExtra = accuracyExtra;
+            g_mapPresets[i].noticeExtra   = noticeExtra;
+            return;
+        }
+    }
+
+    if (g_numMapPresets >= MAX_MAP_SKILL_PRESETS) {
+        return;
+    }
+
+    g_mapPresets[g_numMapPresets].prefix        = (char *)gi.Malloc(strlen(prefix) + 1);
+    Q_strncpyz((char *)g_mapPresets[g_numMapPresets].prefix, prefix, strlen(prefix) + 1);
+    g_mapPresets[g_numMapPresets].accuracyExtra = accuracyExtra;
+    g_mapPresets[g_numMapPresets].noticeExtra   = noticeExtra;
+    g_numMapPresets++;
+}
+
+static void SkillCombatProfile_LoadDefaultPresets(void)
+{
+    int i;
+
+    g_numMapPresets = 0;
+    for (i = 0; mapPresetsDefault[i].prefix; i++) {
+        SkillCombatProfile_AddPreset(
+            mapPresetsDefault[i].prefix, mapPresetsDefault[i].accuracyExtra, mapPresetsDefault[i].noticeExtra
+        );
+    }
+}
+
+static void SkillCombatProfile_LoadPresetFile(void)
+{
+    char        *buffer;
+    char        *cursor;
+    const char  *token;
+    char         prefix[MAX_QPATH];
+    float        acc;
+    float        notice;
+
+    if (gi.FS_ReadFile("sp_skill_presets.cfg", (void **)&buffer, qtrue) <= 0) {
+        return;
+    }
+
+    cursor = buffer;
+    while (1) {
+        token = COM_Parse(&cursor);
+        if (!token[0]) {
+            break;
+        }
+        if (token[0] == '#') {
+            while (*cursor && *cursor != '\n') {
+                cursor++;
+            }
+            continue;
+        }
+
+        Q_strncpyz(prefix, token, sizeof(prefix));
+
+        token = COM_Parse(&cursor);
+        if (!token[0]) {
+            break;
+        }
+        acc = (float)atof(token);
+
+        token = COM_Parse(&cursor);
+        if (!token[0]) {
+            break;
+        }
+        notice = (float)atof(token);
+
+        if (acc > 0.0f && notice > 0.0f) {
+            SkillCombatProfile_AddPreset(prefix, acc, notice);
+        }
+    }
+
+    gi.FS_FreeFile(buffer);
+}
+
+static skillCombatProfile_t g_activeProfile;
+static qboolean             g_profileReady = qfalse;
+static char                 g_profileMap[MAX_QPATH];
+
+static int SkillIndex(void)
+{
+    int s = skill ? skill->integer : 1;
+    if (s < 0) {
+        s = 0;
+    }
+    if (s > 2) {
+        s = 2;
+    }
+    return s;
+}
+
 static void SkillCombatProfile_Notify(void)
 {
     int skillIndex;
@@ -81,62 +224,6 @@ static void SkillCombatProfile_Notify(void)
     );
 }
 
-typedef struct mapSkillPreset_s {
-    const char *prefix;
-    float       accuracyExtra;
-    float       noticeExtra;
-} mapSkillPreset_t;
-
-static const skillCombatProfile_t skillProfiles[3] = {
-    // easy
-    {1.20f, 0.85f, 0.75f, 0.80f, 0.70f, 1.35f, 1.10f, 0.15f, 0.10f, 1.15f},
-    // medium
-    {1.00f, 1.00f, 1.00f, 1.00f, 1.00f, 1.00f, 0.75f, 0.35f, 0.25f, 1.00f},
-    // hard
-    {0.55f, 1.35f, 1.45f, 1.40f, 1.35f, 0.65f, 0.35f, 0.70f, 0.55f, 0.80f},
-};
-
-static const mapSkillPreset_t mapPresets[] = {
-    // Playtest matrix targets (skill 2): base m1-m6, Spearhead (libya/sicily/norway),
-    // Breakthrough outliers get the same hard uplift via prefix match.
-    {"m1l1", 1.10f, 1.05f},
-    {"m1l2", 1.10f, 1.05f},
-    {"m2l1", 1.15f, 1.10f},
-    {"m2l2", 1.15f, 1.10f},
-    {"m3l1", 1.20f, 1.15f},
-    {"m3l2", 1.20f, 1.15f},
-    {"m4l1", 1.20f, 1.15f},
-    {"m4l2", 1.25f, 1.20f},
-    {"m5l1", 1.25f, 1.20f},
-    {"m5l2", 1.25f, 1.20f},
-    {"m6l1", 1.30f, 1.25f},
-    {"m6l2", 1.30f, 1.25f},
-    {"m6l3", 1.30f, 1.25f},
-    {"libya", 1.15f, 1.10f},
-    {"sicily", 1.20f, 1.15f},
-    {"norway", 1.20f, 1.15f},
-    {"m1l1b", 1.15f, 1.10f},
-    {"m2l1b", 1.20f, 1.15f},
-    {"m3l1b", 1.20f, 1.15f},
-    {NULL, 1.0f, 1.0f},
-};
-
-static skillCombatProfile_t g_activeProfile;
-static qboolean             g_profileReady = qfalse;
-static char                 g_profileMap[MAX_QPATH];
-
-static int SkillIndex(void)
-{
-    int s = skill ? skill->integer : 1;
-    if (s < 0) {
-        s = 0;
-    }
-    if (s > 2) {
-        s = 2;
-    }
-    return s;
-}
-
 static void SkillCombatProfile_Rebuild(void)
 {
     const skillCombatProfile_t *base = &skillProfiles[SkillIndex()];
@@ -147,10 +234,10 @@ static void SkillCombatProfile_Rebuild(void)
     g_activeProfile = *base;
 
     if (g_profileMap[0] && SkillIndex() >= 2) {
-        for (i = 0; mapPresets[i].prefix; i++) {
-            if (!Q_stricmpn(g_profileMap, mapPresets[i].prefix, (int)strlen(mapPresets[i].prefix))) {
-                accExtra    = mapPresets[i].accuracyExtra;
-                noticeExtra = mapPresets[i].noticeExtra;
+        for (i = 0; i < g_numMapPresets; i++) {
+            if (!Q_stricmpn(g_profileMap, g_mapPresets[i].prefix, (int)strlen(g_mapPresets[i].prefix))) {
+                accExtra    = g_mapPresets[i].accuracyExtra;
+                noticeExtra = g_mapPresets[i].noticeExtra;
                 break;
             }
         }
@@ -181,6 +268,8 @@ void SkillCombatProfile_Init(void)
     g_profileMap[0] = '\0';
     g_lastNotifySkill = -1;
     g_lastNotifyMap[0] = '\0';
+    SkillCombatProfile_LoadDefaultPresets();
+    SkillCombatProfile_LoadPresetFile();
     SkillCombatProfile_Rebuild();
 }
 

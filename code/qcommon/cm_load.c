@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // cmodel.c -- model loading
 
 #include "cm_local.h"
+#include "bsp_shared.h"
 #include "../client/client.h"
 
 #ifdef BSPC
@@ -50,7 +51,6 @@ void SetPlaneSignbits (cplane_t *out) {
 #define	BOX_PLANES		12
 
 #define	LL(x) x=LittleLong(x)
-
 
 clipMap_t	cm;
 int			c_pointcontents;
@@ -785,11 +785,18 @@ int CM_LoadLump( fileHandle_t handle, lump_t *lump, gamelump_t *glump, int size 
 	if( lump->filelen ) {
 		glump->buffer = Hunk_AllocateTempMemory( lump->filelen );
 
-		if( FS_Seek( handle, lump->fileofs, FS_SEEK_SET ) < 0 ) {
-			Com_Error( ERR_DROP, "CM_LoadLump: Error seeking to lump." );
-		}
+		if( Com_BspSharedData() ) {
+			if( lump->fileofs + lump->filelen > Com_BspSharedLength() ) {
+				Com_Error( ERR_DROP, "CM_LoadLump: lump extends past map buffer." );
+			}
+			Com_Memcpy( glump->buffer, Com_BspSharedData() + lump->fileofs, lump->filelen );
+		} else {
+			if( FS_Seek( handle, lump->fileofs, FS_SEEK_SET ) < 0 ) {
+				Com_Error( ERR_DROP, "CM_LoadLump: Error seeking to lump." );
+			}
 
-		FS_Read( glump->buffer, lump->filelen, handle );
+			FS_Read( glump->buffer, lump->filelen, handle );
+		}
 
 		if( size ) {
 			return lump->filelen / size;
@@ -817,6 +824,16 @@ void CM_FreeLump( gamelump_t *lump )
 }
 
 #define _R( id ) UI_LoadResource( "*" #id )
+
+void CM_SetExternalMapData(const byte *data, int length)
+{
+    Com_BspSharedSet(data, length);
+}
+
+void CM_ClearExternalMapData(void)
+{
+    Com_BspSharedClear();
+}
 
 /*
 ==================
@@ -873,16 +890,29 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	// load the file
 	//
 #ifndef BSPC
-	length = FS_FOpenFileRead( name, &h, qtrue, qtrue );
+	if( Com_BspSharedData() ) {
+		if( Com_BspSharedLength() < (int)sizeof( dheader_t ) ) {
+			Com_Error( ERR_DROP, "CM_LoadMap: %s is too small", name );
+		}
+		length = Com_BspSharedLength();
+		h      = 0;
+		Com_Memcpy( &header, Com_BspSharedData(), sizeof( dheader_t ) );
+	} else {
+		length = FS_FOpenFileRead( name, &h, qtrue, qtrue );
+		if( length <= 0 ) {
+			Com_Error( ERR_DROP, "Couldn't load %s", name );
+		}
+		FS_Read( &header, sizeof( dheader_t ), h );
+	}
 #else
 	length = LoadQuakeFile((quakefile_t *) name, (void **)&buf);
 #endif
 
-	if( length <= 0 ) {
-		Com_Error( ERR_DROP, "Couldn't load %s", name );
+	if( !Com_BspSharedData() ) {
+		if( length <= 0 ) {
+			Com_Error( ERR_DROP, "Couldn't load %s", name );
+		}
 	}
-
-	FS_Read( &header, sizeof( dheader_t ), h );
 
 	last_checksum = LittleLong(header.checksum);
 	*checksum = last_checksum;
@@ -998,7 +1028,9 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	_R( 46 );
 	CM_FreeLump( &lump );
 	_R( 47 );
-	FS_FCloseFile( h );
+	if( h ) {
+		FS_FCloseFile( h );
+	}
 	_R( 48 );
 	CM_InitBoxHull();
 	_R( 49 );

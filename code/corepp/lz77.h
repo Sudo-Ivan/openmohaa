@@ -39,34 +39,22 @@ class cLZ77
     unsigned int   m_off;
     unsigned int   m_len;
     unsigned int   dindex;
+    unsigned char *m_outStart;
+    unsigned char *m_inStart;
 
 public:
     cLZ77();
 
-    /**
-     * @brief Compress a block of data using an LZ77 coder.
-     * 
-     * @param in Input (uncompressed) buffer.
-     * @param in_len Number of input bytes.
-     * @param out Output (compressed) buffer. This buffer must be 0.4% larger than the input buffer, plus one byte.
-     * @param out_len Output length.
-     * @return Always return 0.
-     */
     int Compress(unsigned char *in, size_t in_len, unsigned char *out, size_t *out_len);
 
-    /**
-     * @brief Uncompress a block of data using an LZ77 decoder.
-     * 
-     * @param in Input (compressed) buffer.
-     * @param in_len Number of input bytes.
-     * @param out Output (uncompressed) buffer. This buffer must be large enough to hold the uncompressed data.
-     * @param out_len Output length.
-     * @return 0 on success. -1 if not enough data was read, -2 if too much data was read.
-     */
+    void CompressBegin(unsigned char *in, size_t in_len, unsigned char *out);
+    int  CompressContinue(size_t *out_len, int max_ms);
+
     int Decompress(unsigned char *in, size_t in_len, unsigned char *out, size_t *out_len);
 
 private:
     unsigned int CompressData(unsigned char *in, size_t in_len, unsigned char *out, size_t *out_len);
+    void         CompressTail(size_t in_len, size_t *out_len);
 };
 
 extern cLZ77 g_lz77;

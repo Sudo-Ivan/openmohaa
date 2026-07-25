@@ -540,28 +540,145 @@ static void DeferredSave_CompressBuffer(byte **buf, size_t *len)
     *len = out_len + 8;
 }
 
+typedef enum {
+    DEFERRED_IDLE,
+    DEFERRED_COMPRESS,
+    DEFERRED_WRITE,
+} deferredSavePhase_t;
+
+static deferredSavePhase_t g_deferredSavePhase = DEFERRED_IDLE;
+static cLZ77               g_deferredLz77;
+static byte               *g_deferredRawBuffer;
+static size_t              g_deferredRawLength;
+static byte               *g_deferredCompressedBuffer;
+static size_t              g_deferredCompressedLength;
+static size_t              g_deferredCompressedCapacity;
+static size_t              g_deferredWriteOffset;
+static fileHandle_t        g_deferredWriteHandle;
+
+static void DeferredSave_ResetState(void)
+{
+    g_deferredSavePhase         = DEFERRED_IDLE;
+    g_deferredRawBuffer         = NULL;
+    g_deferredRawLength         = 0;
+    g_deferredCompressedBuffer  = NULL;
+    g_deferredCompressedLength  = 0;
+    g_deferredCompressedCapacity = 0;
+    g_deferredWriteOffset       = 0;
+    g_deferredWriteHandle       = 0;
+}
+
+static void DeferredSave_BeginCompress(void)
+{
+    size_t tempbuf_len;
+
+    g_deferredRawBuffer = g_deferredSaveBuffer;
+    g_deferredRawLength = g_deferredSaveLength;
+    g_deferredSaveBuffer = NULL;
+    g_deferredSaveLength = 0;
+
+    tempbuf_len = (g_deferredRawLength >> 6) + g_deferredRawLength + 27;
+    g_deferredCompressedCapacity = tempbuf_len + 8;
+    g_deferredCompressedBuffer   = (byte *)gi.Malloc(g_deferredCompressedCapacity);
+
+    g_deferredCompressedBuffer[0] = 'C';
+    g_deferredCompressedBuffer[1] = 'S';
+    g_deferredCompressedBuffer[2] = 'V';
+    g_deferredCompressedBuffer[3] = 'G';
+
+    unsigned int temp_le = (unsigned int)g_deferredRawLength;
+    CopyLittleLong(g_deferredCompressedBuffer + 4, &temp_le);
+
+    g_deferredLz77.CompressBegin(g_deferredRawBuffer, g_deferredRawLength, g_deferredCompressedBuffer + 8);
+    g_deferredSavePhase = DEFERRED_COMPRESS;
+}
+
+qboolean DeferredSave_Tick(int max_ms)
+{
+    size_t out_len;
+    int    remaining;
+    size_t chunk;
+    int    start_ms;
+
+    if (!g_deferredSavePending) {
+        return qtrue;
+    }
+
+    if (g_deferredSavePhase == DEFERRED_IDLE) {
+        if (!g_deferredSaveBuffer) {
+            DeferredSave_Cancel();
+            return qtrue;
+        }
+        DeferredSave_BeginCompress();
+    }
+
+    if (g_deferredSavePhase == DEFERRED_COMPRESS) {
+        remaining = g_deferredLz77.CompressContinue(&out_len, max_ms);
+        if (remaining > 0) {
+            return qfalse;
+        }
+
+        g_deferredCompressedLength = out_len + 8;
+        gi.Free(g_deferredRawBuffer);
+        g_deferredRawBuffer = NULL;
+
+        g_deferredSaveBuffer  = g_deferredCompressedBuffer;
+        g_deferredSaveLength  = g_deferredCompressedLength;
+        g_deferredCompressedBuffer = NULL;
+
+        g_deferredWriteHandle = gi.FS_FOpenFileWrite(g_deferredSaveFilename);
+        if (!g_deferredWriteHandle) {
+            gi.Error(ERR_DROP, "DeferredSave: Could not open %s for writing\n", g_deferredSaveFilename);
+        }
+        g_deferredWriteOffset = 0;
+        g_deferredSavePhase     = DEFERRED_WRITE;
+    }
+
+    if (g_deferredSavePhase == DEFERRED_WRITE) {
+        start_ms = gi.Milliseconds();
+        while (g_deferredWriteOffset < g_deferredSaveLength) {
+            chunk = g_deferredSaveLength - g_deferredWriteOffset;
+            if (chunk > 65536) {
+                chunk = 65536;
+            }
+            gi.FS_Write(g_deferredSaveBuffer + g_deferredWriteOffset, chunk, g_deferredWriteHandle);
+            g_deferredWriteOffset += chunk;
+
+            if (max_ms > 0 && gi.Milliseconds() - start_ms >= max_ms) {
+                return qfalse;
+            }
+        }
+
+        gi.FS_FCloseFile(g_deferredWriteHandle);
+        g_deferredWriteHandle = 0;
+        DeferredSave_Cancel();
+        DeferredSave_ResetState();
+        return qtrue;
+    }
+
+    return qfalse;
+}
+
 qboolean DeferredSave_Flush(int phase)
 {
-    if (!g_deferredSavePending || !g_deferredSaveBuffer) {
-        return qtrue;
-    }
-
-    if (phase == 0) {
-        DeferredSave_CompressBuffer(&g_deferredSaveBuffer, &g_deferredSaveLength);
-        return qfalse;
-    }
-
-    if (phase == 1) {
-        gi.FS_WriteFile(g_deferredSaveFilename, g_deferredSaveBuffer, g_deferredSaveLength);
-        DeferredSave_Cancel();
-        return qtrue;
-    }
-
-    return qtrue;
+    (void)phase;
+    return DeferredSave_Tick(0);
 }
 
 void DeferredSave_Cancel(void)
 {
+    if (g_deferredWriteHandle) {
+        gi.FS_FCloseFile(g_deferredWriteHandle);
+        g_deferredWriteHandle = 0;
+    }
+    if (g_deferredRawBuffer) {
+        gi.Free(g_deferredRawBuffer);
+        g_deferredRawBuffer = NULL;
+    }
+    if (g_deferredCompressedBuffer) {
+        gi.Free(g_deferredCompressedBuffer);
+        g_deferredCompressedBuffer = NULL;
+    }
     if (g_deferredSaveBuffer) {
         gi.Free(g_deferredSaveBuffer);
         g_deferredSaveBuffer = NULL;
@@ -569,6 +686,7 @@ void DeferredSave_Cancel(void)
     g_deferredSaveLength      = 0;
     g_deferredSaveFilename[0] = '\0';
     g_deferredSavePending     = qfalse;
+    DeferredSave_ResetState();
 }
 
 void Archive_StashValidatedLoad(const char *name, byte *buf, size_t len)

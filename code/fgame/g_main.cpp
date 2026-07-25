@@ -40,6 +40,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "g_bot.h"
 #include "navigation_recast_load.h"
 #include "skill_combat_profile.h"
+#include "sp_population.h"
 
 #include "archive.h"
 #include "../corepp/tiki.h"
@@ -271,6 +272,7 @@ void G_InitGame(int levelTime, int randomSeed)
     CVAR_Init();
 
     SkillCombatProfile_Init();
+    SpPopulation_Init();
 
     game.Vars()->ClearList();
 
@@ -471,21 +473,24 @@ void G_AddGEntity(gentity_t *edict, qboolean showentnums)
 
 static void ProcessDeferredSave(void)
 {
-    static int deferredPhase = 0;
+    static cvar_t *com_saveSliceMs;
+    int            maxMs;
 
     if (!g_deferredSavePending) {
-        deferredPhase = 0;
         return;
     }
 
-    if (deferredPhase == 0) {
-        DeferredSave_Flush(0);
-        deferredPhase = 1;
-    } else if (deferredPhase == 1) {
-        if (DeferredSave_Flush(1)) {
-            deferredPhase = 0;
-            gi.Printf(HUD_MESSAGE_YELLOW "%s\n", gi.LV_ConvertString("Game Saved"));
-        }
+    if (!com_saveSliceMs) {
+        com_saveSliceMs = gi.Cvar_Get("com_saveSliceMs", "4", CVAR_ARCHIVE);
+    }
+
+    maxMs = com_saveSliceMs->integer;
+    if (maxMs < 0) {
+        maxMs = 0;
+    }
+
+    if (DeferredSave_Tick(maxMs)) {
+        gi.Printf(HUD_MESSAGE_YELLOW "%s\n", gi.LV_ConvertString("Game Saved"));
     }
 }
 

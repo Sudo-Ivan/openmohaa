@@ -118,6 +118,8 @@ void Com_PerfInit(void)
     com_touchMemory  = Cvar_Get("com_touchMemory", "-1", CVAR_ARCHIVE);
     Cvar_CheckRange(com_touchMemory, -1, 1, qtrue);
     com_perf_notify  = Cvar_Get("com_perf_notify", "1", CVAR_ARCHIVE);
+    Cvar_Get("com_saveSliceMs", "4", CVAR_ARCHIVE);
+    Cvar_Get("g_sp_population_scale", "1", CVAR_ARCHIVE);
 
     Cmd_AddCommand("perf_apply", Com_ApplyPerfProfileCommon);
     Cmd_AddCommand("perf_status", Com_PerfStatus_f);
@@ -193,6 +195,7 @@ void Com_ApplyPerfProfileCommon(void)
         Com_PerfSetIfDefault(Cvar_Get("com_maxfpsUnfocused", "0", CVAR_ARCHIVE), "30");
         Com_PerfSetIfDefault(Cvar_Get("com_maxfpsMinimized", "0", CVAR_ARCHIVE), "15");
         Com_PerfSetIfDefault(Cvar_Get("low_anim_memory", "0", 0), "1");
+        Cvar_Set("g_sp_population_scale", "1.0");
         if (!com_loadScreenMs->integer) {
             Cvar_Set("com_loadScreenMs", "150");
         }
@@ -200,6 +203,7 @@ void Com_ApplyPerfProfileCommon(void)
     case COM_PERFPROFILE_BALANCED:
         Com_PerfSetIfDefault(Cvar_Get("com_busyWait", "0", CVAR_ARCHIVE), "0");
         Com_PerfSetIfDefault(Cvar_Get("com_maxfps", "85", CVAR_ARCHIVE), "85");
+        Cvar_Set("g_sp_population_scale", "1.15");
         if (!com_loadScreenMs->integer) {
             Cvar_Set("com_loadScreenMs", "100");
         }
@@ -209,6 +213,7 @@ void Com_ApplyPerfProfileCommon(void)
         Com_PerfSetIfDefault(Cvar_Get("com_maxfps", "85", CVAR_ARCHIVE), "144");
         Com_PerfSetIfDefault(Cvar_Get("com_maxfpsUnfocused", "0", CVAR_ARCHIVE), "60");
         Com_PerfSetIfDefault(Cvar_Get("low_anim_memory", "0", 0), "0");
+        Cvar_Set("g_sp_population_scale", "1.35");
         if (!com_loadScreenMs->integer) {
             Cvar_Set("com_loadScreenMs", "66");
         }

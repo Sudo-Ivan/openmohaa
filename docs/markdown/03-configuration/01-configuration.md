@@ -94,6 +94,30 @@ To calculate IP subnets, search for `IP subnet calculator` on Internet.
 
 ## Game settings
 
+### Performance profiles
+
+OpenMoHAA can tune client frame pacing, loading UI refresh, post-load memory touching, renderer quality, and single-player population from one profile.
+
+| Cvar | Values | Description |
+|------|--------|-------------|
+| `com_perfprofile` | `0` off, `1` legacy, `2` balanced, `3` modern, `4` auto (default) | Chooses a preset. Auto picks from installed RAM and CPU features. |
+| `com_loadScreenMs` | milliseconds, `0` = use profile default | Minimum interval between loading screen updates during map load. |
+| `com_touchMemory` | `-1` auto, `0` off, `1` on | Whether to walk allocated memory after registration to warm caches. Auto skips on low RAM. |
+| `com_perf_notify` | `0` / `1` (default on) | Print resolved profile to the console when applied. |
+| `com_saveSliceMs` | milliseconds (default `4`) | Max time per frame for deferred save compression and disk write. |
+| `g_sp_population_scale` | float (default `1`, set by profile) | SP only: scales AI vision distance and death-spawn chances on modern hardware. |
+
+Commands:
+
+- `perf_apply` applies the current `com_perfprofile` cvars.
+- `perf_status` prints the resolved profile without changing cvars.
+
+### Single-player campaign
+
+- `unlockmissions` sets all `g_m1l1` through `g_m6l3` mission unlock cvars to `1` so every campaign map is selectable from the main menu.
+
+Hard-mode AI map tuning can be overridden without recompiling by placing `sp_skill_presets.cfg` in `main/` (see `misc/sp_skill_presets.cfg` in the source tree for the format).
+
 ### Chat
 
 Chat messages are logged to console and in the logfile by default, without requiring to set the `developer` variable.

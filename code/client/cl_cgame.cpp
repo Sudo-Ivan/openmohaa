@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // cl_cgame.c  -- client system interaction with client game
 
 #include "client.h"
+#include "cl_mapshared.h"
+#include "../qcommon/bsp_shared.h"
 #include "cl_ui.h"
 #include "cl_uiradar.h"
 #include "../corepp/tiki.h"
@@ -471,10 +473,36 @@ CL_CM_LoadMap
 Just adds default parameters that cgame doesn't need to know about
 ====================
 */
+void CL_R_LoadWorldMap( const char *mapname );
+
 void CL_CM_LoadMap( const char *mapname, int *checksum ) {
+	byte *buffer;
+	int   length;
+
+	CL_MapShared_Clear();
+	length = FS_ReadFile( mapname, (void **)&buffer );
+	if ( length <= 0 ) {
+		Com_Error( ERR_DROP, "CL_CM_LoadMap: couldn't load %s", mapname );
+	}
+
+	CL_MapShared_Set( mapname, buffer, length );
 	CM_LoadMap( mapname, qtrue, checksum );
-	// prepare world vis data
 	re.SetWorldVisData(CM_VisibilityPointer());
+}
+
+void CL_R_LoadWorldMap( const char *mapname ) {
+	byte *buffer;
+	int   length;
+
+	buffer = CL_MapShared_Take( mapname, &length );
+	if ( buffer ) {
+		Com_BspSharedSet( buffer, length );
+		re.LoadWorld( mapname );
+		Com_BspSharedClear();
+		FS_FreeFile( buffer );
+	} else {
+		re.LoadWorld( mapname );
+	}
 }
 
 /*
@@ -714,7 +742,7 @@ void CL_InitCGameDLL( clientGameImport_t *cgi, clientGameExport_t **cge ) {
 	cgi->R_ClearScene				= re.ClearScene;
 	cgi->R_RenderScene				= re.RenderScene;
 
-	cgi->R_LoadWorldMap				= re.LoadWorld;
+	cgi->R_LoadWorldMap				= CL_R_LoadWorldMap;
 	cgi->R_PrintBSPFileSizes		= re.PrintBSPFileSizes;
 	cgi->R_MapVersion				= re.MapVersion;
 	cgi->R_RegisterModel			= re.RegisterModel;

@@ -1536,6 +1536,22 @@ void Com_GameRestart_f(void)
 	Com_GameRestart(0, qtrue);
 }
 
+static void Com_UnlockMissions_f(void)
+{
+	static const char *missionCvars[] = {
+		"g_m1l1", "g_m1l2", "g_m1l3", "g_m2l1", "g_m2l2", "g_m2l3", "g_m3l1", "g_m3l2", "g_m3l3",
+		"g_m4l1", "g_m4l2", "g_m4l3", "g_m5l1", "g_m5l2", "g_m5l3", "g_m6l1", "g_m6l2", "g_m6l3",
+		"g_t2l1", "g_t3l1", NULL
+	};
+	int i;
+
+	for (i = 0; missionCvars[i]; i++) {
+		Cvar_Set(missionCvars[i], "1");
+	}
+
+	Com_Printf("All campaign mission levels unlocked (g_m* cvars set to 1).\n");
+}
+
 #ifndef STANDALONE
 
 // TTimo: centralizing the cl_cdkey stuff after I discovered a buffer overflow problem with the dedicated server version
@@ -1878,6 +1894,7 @@ void Com_Init( char *commandLine ) {
 	Cmd_SetCommandCompletionFunc( "writeconfig", Cmd_CompleteCfgName );
 	Cmd_AddCommand("pause", Com_Pause_f);
 	Cmd_AddCommand("game_restart", Com_GameRestart_f);
+	Cmd_AddCommand("unlockmissions", Com_UnlockMissions_f);
 
 	// override anything from the config files with command line args
 	Com_StartupVariable( NULL );

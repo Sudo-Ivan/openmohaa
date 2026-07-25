@@ -8,6 +8,7 @@ set(COMMON_SOURCES
     ${SOURCE_DIR}/qcommon/alias.c
     ${SOURCE_DIR}/qcommon/bg_compat.cpp
     ${SOURCE_DIR}/qcommon/cm_fencemask.c
+    ${SOURCE_DIR}/qcommon/bsp_shared.c
     ${SOURCE_DIR}/qcommon/cm_load.c
     ${SOURCE_DIR}/qcommon/cm_patch.c
     ${SOURCE_DIR}/qcommon/cm_polylib.c

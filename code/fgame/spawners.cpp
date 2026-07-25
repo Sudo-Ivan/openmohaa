@@ -36,6 +36,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "game.h"
 #include "g_phys.h"
 #include "g_spawn.h"
+#include "sp_population.h"
 
 Event EV_Spawn_ModelName
 ( 
@@ -154,7 +155,7 @@ void Spawn::SetSpawnItem(Event *ev)
 
 void Spawn::SetSpawnChance(Event *ev)
 {
-    spawnchance = ev->GetFloat(1);
+    spawnchance = SpPopulation_ScaledChance(ev->GetFloat(1));
 }
 
 Spawn::Spawn()

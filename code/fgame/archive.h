@@ -362,7 +362,7 @@ extern size_t   g_deferredSaveLength;
 extern char     g_deferredSaveFilename[MAX_DEFERRED_SAVE_FILENAME];
 extern qboolean g_deferredSavePending;
 
-qboolean DeferredSave_Flush(int phase);
+qboolean DeferredSave_Tick(int max_ms);
 void     DeferredSave_Cancel(void);
 
 void Archive_StashValidatedLoad(const char *name, byte *buf, size_t len);
