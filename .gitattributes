@@ -1,0 +1,39 @@
+# Auto-detect text files and normalize to LF
+* text=auto eol=lf
+
+# Source code
+*.c     text
+*.cpp   text
+*.h     text
+*.hpp   text
+*.cmake text
+*.yml   text
+*.yaml  text
+*.json  text
+*.md    text
+*.cfg   text
+*.sh    text eol=lf
+
+# Binary files
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.tga  binary
+*.zip  binary
+*.pk3  binary
+*.dll  binary
+*.pdb  binary
+*.exe  binary
+*.dylib binary
+*.dylib binary
+*.so   binary
+*.ico  binary
+*.ttf  binary
+
+# Generated files (diff should not show changes)
+*.o     -diff
+*.obj   -diff
+*.ilk   -diff
+*.exp   -diff
+*.lib   -diff
+*.a     -diff

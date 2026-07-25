@@ -1,0 +1,15 @@
+# OpenMoHAA Server Bans File
+# Format: <type> <ip> <subnet>[:<reason>]
+#   type:    0 = ban, 1 = exception
+#   ip:      IPv4 or IPv6 address
+#   subnet:  number of bits in the network prefix (IPv4: 1-32, IPv6: 1-128)
+#   reason:  optional text shown to the banned player
+#
+# Examples:
+#   0 192.168.1.100 32:cheating
+#   0 10.0.0.0 8:range ban
+#   1 192.168.1.1 32:trusted admin
+#   0 2001:db8::1 128
+#
+# This file is managed by the server. Edit while the server is
+# stopped, or use 'rehashbans' via RCON to reload changes.
