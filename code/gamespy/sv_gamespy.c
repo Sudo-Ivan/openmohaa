@@ -437,7 +437,12 @@ void AuthenticateCallback(int gameid, int localid, int authenticated, char *errm
         challenge->cdkeyState = CDKS_AUTHENTICATED;
         challenge->pingTime   = svs.time;
 
-        SV_NET_OutOfBandPrint(&svs.netprofile, challenge->adr, "challengeResponse %i", challenge->challenge);
+        if (challenge->clientChallenge) {
+            SV_NET_OutOfBandPrint(&svs.netprofile, challenge->adr, "challengeResponse %i %i",
+                challenge->challenge, challenge->clientChallenge);
+        } else {
+            SV_NET_OutOfBandPrint(&svs.netprofile, challenge->adr, "challengeResponse %i", challenge->challenge);
+        }
     } else {
         char buf[32];
 
@@ -494,11 +499,21 @@ void SV_GamespyAuthorize(netadr_t from, const char *response)
             Com_DPrintf("authorize server timed out\n");
             challenge->cdkeyState = CDKS_AUTHENTICATED;
             challenge->pingTime   = svs.time;
-            SV_NET_OutOfBandPrint(&svs.netprofile, from, "challengeResponse %i", challenge->challenge);
+            if (challenge->clientChallenge) {
+                SV_NET_OutOfBandPrint(&svs.netprofile, from, "challengeResponse %i %i",
+                    challenge->challenge, challenge->clientChallenge);
+            } else {
+                SV_NET_OutOfBandPrint(&svs.netprofile, from, "challengeResponse %i", challenge->challenge);
+            }
         }
         break;
     case CDKS_AUTHENTICATED:
-        SV_NET_OutOfBandPrint(&svs.netprofile, from, "challengeResponse %i", challenge->challenge);
+        if (challenge->clientChallenge) {
+            SV_NET_OutOfBandPrint(&svs.netprofile, from, "challengeResponse %i %i",
+                challenge->challenge, challenge->clientChallenge);
+        } else {
+            SV_NET_OutOfBandPrint(&svs.netprofile, from, "challengeResponse %i", challenge->challenge);
+        }
         break;
     case CDKS_FAILED:
         // authentication server told the cdkey was invalid

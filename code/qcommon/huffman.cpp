@@ -341,9 +341,11 @@ void Huff_offsetTransmit (huff_t *huff, int ch, byte *fout, int *offset, int max
 }
 
 void Huff_Decompress(msg_t *mbuf, int offset) {
-	int			ch, i, j;
 	size_t		cch;
 	size_t		size;
+	size_t		j;
+	int			ch, i;
+	int			maxbits;
 	byte		seq[65536];
 	byte*		buffer;
 	huff_t		huff;
@@ -351,7 +353,7 @@ void Huff_Decompress(msg_t *mbuf, int offset) {
 	size = mbuf->cursize - offset;
 	buffer = mbuf->data + offset;
 
-	if ( size <= 0 ) {
+	if ( size <= 2 ) {
 		return;
 	}
 
@@ -368,27 +370,37 @@ void Huff_Decompress(msg_t *mbuf, int offset) {
 	if ( cch > mbuf->maxsize - offset ) {
 		cch = mbuf->maxsize - offset;
 	}
+	if ( cch > sizeof(seq) ) {
+		cch = sizeof(seq);
+	}
+	maxbits = (int)(size << 3);
 	bloc = 16;
 
 	for ( j = 0; j < cch; j++ ) {
 		ch = 0;
-		// don't overflow reading from the messages
-		// FIXME: would it be better to have an overflow check in get_bit ?
-		if ( (bloc >> 3) > size ) {
+		if ( bloc >= maxbits ) {
 			seq[j] = 0;
 			break;
 		}
-		Huff_Receive(huff.tree, &ch, buffer);				/* Get a character */
-		if ( ch == NYT ) {								/* We got a NYT, get the symbol associated with it */
+		Huff_offsetReceive(huff.tree, &ch, buffer, &bloc, maxbits);
+		if ( bloc > maxbits ) {
+			seq[j] = 0;
+			break;
+		}
+		if ( ch == NYT ) {
 			ch = 0;
 			for ( i = 0; i < 8; i++ ) {
+				if ( bloc >= maxbits ) {
+					ch = 0;
+					break;
+				}
 				ch = (ch<<1) + get_bit(buffer);
 			}
 		}
     
-		seq[j] = ch;									/* Write symbol */
+		seq[j] = ch;
 
-		Huff_addRef(&huff, (byte)ch);								/* Increment node */
+		Huff_addRef(&huff, (byte)ch);
 	}
 	mbuf->cursize = cch + offset;
 	Com_Memcpy(mbuf->data + offset, seq, cch);

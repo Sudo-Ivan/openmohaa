@@ -1384,8 +1384,10 @@ void CL_Connect( const char *server, netadrtype_t family ) {
 	else {
 		clc.state = CA_CONNECTING;
 
-		// Set a client challenge number that ideally is mirrored back by the server.
-		clc.challenge = (((unsigned int)rand() << 16) ^ (unsigned int)rand()) ^ Com_Milliseconds();
+		// Local challenge mirrored by challengeResponse to stop UDP connect hijacking.
+		do {
+			clc.clientChallenge = (((unsigned int)rand() << 16) ^ (unsigned int)rand()) ^ Com_Milliseconds();
+		} while (clc.clientChallenge == 0);
 	}
 
 	clc.connectTime = -99999;	// CL_CheckForResend() will fire immediately
@@ -2049,7 +2051,7 @@ void CL_CheckForResend( void ) {
 		if (!com_standalone->integer && clc.serverAddress.type == NA_IP && !Sys_IsLANAddress( clc.serverAddress ) )
 			CL_RequestAuthorization();
 #endif
-		CL_NET_OutOfBandPrint(clc.serverAddress, "getchallenge");
+		CL_NET_OutOfBandPrint(clc.serverAddress, "getchallenge %i", clc.clientChallenge);
 		break;
 	case CA_AUTHORIZING:
 		// resend the cd key authorization
@@ -2314,6 +2316,30 @@ void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean extend
 
 /*
 =================
+CL_IsFromExpectedServer
+
+Connectionless packets that affect session state must come from the
+server we are contacting or already connected to.
+=================
+*/
+static qboolean CL_IsFromExpectedServer( netadr_t from ) {
+	if ( clc.state >= CA_CONNECTED ) {
+		if ( NET_CompareAdr( from, clc.netchan.remoteAddress ) ) {
+			return qtrue;
+		}
+	}
+
+	if ( clc.state >= CA_CONNECTING ) {
+		if ( NET_CompareAdr( from, clc.serverAddress ) || NET_CompareBaseAdr( from, clc.serverAddress ) ) {
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+
+/*
+=================
 CL_ConnectionlessPacket
 
 Responses to broadcasts, etc
@@ -2323,6 +2349,8 @@ void CL_ConnectionlessPacket( netadr_t from, msg_t *msg ) {
 	char	*s;
 	char	*c;
 	const char	*reason;
+	const char	*echoed;
+	int		echoedClientChallenge;
 	
 	if (cl_netprofile->integer) {
 		NetProfileAddPacket(&cls.netprofile.downstream, msg->cursize, NETPROF_PACKET_MESSAGE);
@@ -2345,18 +2373,33 @@ void CL_ConnectionlessPacket( netadr_t from, msg_t *msg ) {
 	if ( !Q_stricmp(c, "challengeResponse") ) {
 		if ( clc.state != CA_CONNECTING && clc.state != CA_AUTHORIZING ) {
 			Com_Printf( "Unwanted challenge response received.  Ignored.\n" );
-		} else {
-			// start sending challenge repsonse instead of challenge request packets
-			clc.challenge = atoi(Cmd_Argv(1));
-			clc.state = CA_CHALLENGING;
-			clc.connectPacketCount = 0;
-			clc.connectTime = -99999;
-
-			// take this address as the new server address.  This allows
-			// a server proxy to hand off connections to multiple servers
-			clc.serverAddress = from;
-			Com_DPrintf ("challengeResponse: %d\n", clc.challenge);
+			return;
 		}
+
+		echoed = Cmd_Argv(2);
+		echoedClientChallenge = *echoed ? atoi(echoed) : 0;
+
+		// Require expected address, or a matching echoed client challenge for proxy handoff.
+		if ( !NET_CompareAdr( from, clc.serverAddress ) && !NET_CompareBaseAdr( from, clc.serverAddress ) ) {
+			if ( !*echoed || echoedClientChallenge != clc.clientChallenge ) {
+				Com_DPrintf( "Challenge response from unexpected source. Ignored.\n" );
+				return;
+			}
+		} else if ( *echoed && echoedClientChallenge != clc.clientChallenge ) {
+			Com_DPrintf( "Challenge response with bad client challenge. Ignored.\n" );
+			return;
+		}
+
+		// start sending challenge response instead of challenge request packets
+		clc.challenge = atoi(Cmd_Argv(1));
+		clc.state = CA_CHALLENGING;
+		clc.connectPacketCount = 0;
+		clc.connectTime = -99999;
+
+		// take this address as the new server address.  This allows
+		// a server proxy to hand off connections to multiple servers
+		clc.serverAddress = from;
+		Com_DPrintf ("challengeResponse: %d\n", clc.challenge);
 		return;
 	}
 
@@ -2411,12 +2454,21 @@ void CL_ConnectionlessPacket( netadr_t from, msg_t *msg ) {
 
 	// echo request from server
 	if ( !Q_stricmp(c, "echo") ) {
+		if ( !CL_IsFromExpectedServer( from ) ) {
+			return;
+		}
 		CL_NET_OutOfBandPrint(from, "%s", Cmd_Argv(1) );
 		return;
 	}
 
 	// cd check
 	if ( !Q_stricmp(c, "getKey") ) {
+		if ( clc.state != CA_CONNECTING && clc.state != CA_AUTHORIZING ) {
+			return;
+		}
+		if ( !NET_CompareAdr( from, clc.serverAddress ) && !NET_CompareBaseAdr( from, clc.serverAddress ) ) {
+			return;
+		}
 		clc.state = CA_AUTHORIZING;
 		gcd_compute_response(cl_cdkey, Cmd_Argv(1), cls.gcdResponse, CDResponseMethod_NEWAUTH);
 		CL_NET_OutOfBandPrint(from, "authorizeThis %s", cls.gcdResponse);
@@ -2429,8 +2481,11 @@ void CL_ConnectionlessPacket( netadr_t from, msg_t *msg ) {
 		return;
 	}
 
-	// echo request from server
+	// print from server
 	if ( !Q_stricmp(c, "print") ) {
+		if ( !CL_IsFromExpectedServer( from ) ) {
+			return;
+		}
 		s = MSG_ReadString( msg );
 		Q_strncpyz( clc.serverMessage, s, sizeof( clc.serverMessage ) );
 		Com_Printf( "%s", s );
@@ -2445,6 +2500,9 @@ void CL_ConnectionlessPacket( netadr_t from, msg_t *msg ) {
 
 	// wombat: mohaa servers send this to reject clients
 	if ( !Q_stricmp(c, "droperror") ) {
+		if ( !CL_IsFromExpectedServer( from ) ) {
+			return;
+		}
         reason = MSG_ReadString(msg);
         Com_Printf("Server dropped connection. Reason: %s", reason);
 		Cvar_Set("com_errorMessage", reason);
@@ -2455,6 +2513,9 @@ void CL_ConnectionlessPacket( netadr_t from, msg_t *msg ) {
     }
 
     if (!Q_stricmp(c, "wrongver")) {
+		if ( !CL_IsFromExpectedServer( from ) ) {
+			return;
+		}
         reason = MSG_ReadString(msg);
         Cvar_Set("com_errorMessage", va("Server is version %s, you are using %s, from base '%s'", reason, com_target_shortversion->string, Cvar_VariableString("fs_basegame")));
         CL_Disconnect_f();

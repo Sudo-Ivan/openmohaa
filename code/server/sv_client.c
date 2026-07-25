@@ -55,10 +55,22 @@ as well as IPv6 connections, since there is no way to use the
 v4-only auth server for these new types of connections.
 =================
 */
+static void SV_SendChallengeResponse(netadr_t from, challenge_t *challenge)
+{
+	challenge->pingTime = svs.time;
+
+	// Echo client challenge when provided so clients can reject spoofed responses.
+	if (challenge->clientChallenge) {
+		SV_NET_OutOfBandPrint( &svs.netprofile, from, "challengeResponse %i %i",
+			challenge->challenge, challenge->clientChallenge );
+	} else {
+		SV_NET_OutOfBandPrint( &svs.netprofile, from, "challengeResponse %i", challenge->challenge );
+	}
+}
+
 void SV_GetChallenge(netadr_t from)
 {
 	challenge_t	*challenge;
-	qboolean wasfound = qfalse;
 
 	// ignore if we are in single player
 	// Removed in OPM
@@ -83,21 +95,26 @@ void SV_GetChallenge(netadr_t from)
 
 	challenge = FindChallenge(from, qtrue);
 
+	// Optional client challenge from "getchallenge <clientChallenge>"
+	if ( Cmd_Argc() > 1 ) {
+		challenge->clientChallenge = atoi( Cmd_Argv(1) );
+	} else {
+		challenge->clientChallenge = 0;
+	}
+
 	// if they are on a lan address, send the challengeResponse immediately
 
 	// we send the challengeResponse immediately as there is no AUTH server for us
 	// it's also way more cool this way :)
 	if ( Sys_IsLANAddress( from ) ) {
-		challenge->pingTime = svs.time;
-		SV_NET_OutOfBandPrint( &svs.netprofile, from, "challengeResponse %i", challenge->challenge );
+		SV_SendChallengeResponse( from, challenge );
 		return;
 	}
 
 	if (com_protocol->integer < PROTOCOL_MOHTA_MIN) {
 		// mohaa below 2.0 doesn't handle gamespy key
 		// so send the challenge response directly
-		challenge->pingTime = svs.time;
-		SV_NET_OutOfBandPrint( &svs.netprofile, from, "challengeResponse %i", challenge->challenge);
+		SV_SendChallengeResponse( from, challenge );
 		return;
 	}
 
@@ -105,8 +122,7 @@ void SV_GetChallenge(netadr_t from)
 		// cdkey authorization is currently useless because gamespy as shut down
 		// however, it could be an useful feature for a far future
 		// where players could be authenticated
-		challenge->pingTime = svs.time;
-		SV_NET_OutOfBandPrint( &svs.netprofile, from, "challengeResponse %i", challenge->challenge);
+		SV_SendChallengeResponse( from, challenge );
 		return;
 	}
 

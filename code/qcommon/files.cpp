@@ -908,6 +908,11 @@ long FS_BaseDir_FOpenFileRead(const char *filename, fileHandle_t *fp)
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
+	if ( !filename || COM_IsPathTraversal( filename ) ) {
+		*fp = 0;
+		return -1;
+	}
+
 	f = FS_HandleForFile();
 	fsh[f].zipFile = qfalse;
 

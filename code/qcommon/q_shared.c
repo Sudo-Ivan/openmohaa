@@ -269,6 +269,26 @@ qboolean COM_CompareExtension(const char* in, const char* ext)
 }
 
 /*
+============
+COM_IsPathTraversal
+
+Reject path components that escape the intended tree.
+============
+*/
+qboolean COM_IsPathTraversal(const char *path)
+{
+	if (!path || !path[0]) {
+		return qtrue;
+	}
+
+	if (strstr(path, "..") || strstr(path, "::")) {
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+/*
 ==================
 COM_DefaultExtension
 ==================

@@ -1124,6 +1124,7 @@ const char	*COM_SkipPath( const char *pathname );
 const char	*COM_GetExtension( const char *name );
 void	COM_StripExtension(const char *in, char *out, int destsize);
 qboolean COM_CompareExtension(const char* in, const char* ext);
+qboolean COM_IsPathTraversal(const char *path);
 void	COM_DefaultExtension( char *path, int maxSize, const char *extension );
 
 void	COM_BeginParseSession( const char *name );
