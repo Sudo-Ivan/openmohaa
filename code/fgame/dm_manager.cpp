@@ -1491,7 +1491,7 @@ void DM_Manager::EventDoRoundTransition(Event *ev)
             gentity_t *e = &g_entities[j];
             if (!e->inuse || !e->entity || !e->client) continue;
             Player *p = (Player *)e->entity;
-            G_LogPrintf("Stat: %s %d %d %d\n",
+            gi.Printf("Stat: %s %d %d %d\n",
                 p->client->pers.netname,
                 p->GetNumKills(), p->GetNumDeaths(),
                 p->m_iNumHitsTaken);

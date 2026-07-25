@@ -293,6 +293,8 @@ cvar_t *g_bot_instamsg_chance;
 cvar_t *g_bot_instamsg_delay;
 cvar_t *g_bot_initial_spawn_delay;
 cvar_t *g_bot_manualmove;
+cvar_t *g_bot_skill;
+cvar_t *g_bot_flanking;
 
 cvar_t *g_rankedserver;
 cvar_t *g_spectatefollow_firstperson;

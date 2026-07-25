@@ -969,7 +969,7 @@ const char *G_ClientConnect(int clientNum, qboolean firstTime, qboolean differen
         G_PrintToAllClients(va("%s is preparing for deployment\n", client->pers.netname), 2);
 
         if (sv_connectionLog && sv_connectionLog->integer) {
-            G_LogPrintf("Connect: %s (client %d) from %s\n",
+            gi.Printf("Connect: %s (client %d) from %s\n",
                 client->pers.netname, clientNum, Info_ValueForKey(client->pers.userinfo, "ip"));
         }
     }
@@ -1145,9 +1145,9 @@ void G_ClientDisconnect(gentity_t *ent)
 	}
 
 	if (sv_connectionLog && sv_connectionLog->integer) {
-	    G_LogPrintf("Disconnect: %s (client %d)\n", ent->client->pers.netname, ent->client->ps.clientNum);
+	    gi.Printf("Disconnect: %s (client %d)\n", ent->client->pers.netname, ent->client->ps.clientNum);
 	}
-	G_LogPrintf( "ClientDisconnect: %i\n", ent->client->ps.clientNum );
+	gi.Printf( "ClientDisconnect: %i\n", ent->client->ps.clientNum );
 
 
 	gi.UnlinkEntity (ent);
