@@ -366,12 +366,12 @@ ClassDef::ClassDef()
 }
 
 ClassDef::ClassDef(
-    const char         *classname,
-    const char         *classID,
-    const char         *superclass,
-    ResponseDef<Class> *responses,
-    void *(*newInstance)(void),
-    int classSize
+    const char         *in_classname,
+    const char         *in_classID,
+    const char         *in_superclass,
+    ResponseDef<Class> *in_responses,
+    void *(*in_newInstance)(void),
+    int in_classSize
 )
 {
     ClassDef *node;
@@ -380,15 +380,15 @@ ClassDef::ClassDef(
         classlist = this;
     }
 
-    this->classname      = classname;
-    this->classID        = classID;
-    this->superclass     = superclass;
-    this->responses      = responses;
+    this->classname      = in_classname;
+    this->classID        = in_classID;
+    this->superclass     = in_superclass;
+    this->responses      = in_responses;
     this->numEvents      = 0;
     this->responseLookup = NULL;
-    this->newInstance    = newInstance;
-    this->classSize      = classSize;
-    this->super          = getClass(superclass);
+    this->newInstance    = in_newInstance;
+    this->classSize      = in_classSize;
+    this->super          = getClass(in_superclass);
 
 #ifdef WITH_SCRIPT_ENGINE
     this->waitTillSet = NULL;
@@ -589,7 +589,7 @@ void ClassEvents(const char *classname, qboolean print_to_disk)
     ClassDef           *c;
     ResponseDef<Class> *r;
     int                 ev;
-    int                 i, j;
+    int                 i;
     qboolean           *set;
     int                 num, orderNum;
     Event             **events;
@@ -627,9 +627,6 @@ void ClassEvents(const char *classname, qboolean print_to_disk)
 
     orderNum = 0;
     for (; c != NULL; c = c->super) {
-        if (orderNum < MAX_INHERITANCE) {
-            classes[orderNum] = c;
-        }
         r = c->responses;
         if (r) {
             for (i = 0; r[i].event != NULL; i++) {
@@ -654,7 +651,7 @@ void ClassEvents(const char *classname, qboolean print_to_disk)
     sortedDefs.Resize(ClassDef::sortedList.NumObjects());
 
     c = getClass(classname);
-    for (int i = 1; i <= ClassDef::sortedList.NumObjects(); i++) {
+    for (i = 1; i <= ClassDef::sortedList.NumObjects(); i++) {
         EventDef *def = c->GetDef(ClassDef::sortedList.ObjectAt(i));
         sortedDefs.AddObject(def);
     }

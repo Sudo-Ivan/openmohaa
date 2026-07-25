@@ -385,13 +385,13 @@ void MEM_BlockAlloc<a, b>::Free(void *ptr) noexcept
         block->has_used_data        = true;
 
         if (block->freeDataAvailable()) {
-            const block_offset_t free_data = block->free_data;
-            const block_offset_t prev_data = block->prev_data[free_data];
+            const block_offset_t free_data    = block->free_data;
+            const block_offset_t prev_free_data = block->prev_data[free_data];
 
-            block->next_data[prev_data] = used_data;
-            block->prev_data[free_data] = used_data;
-            block->next_data[used_data] = free_data;
-            block->prev_data[used_data] = prev_data;
+            block->next_data[prev_free_data] = used_data;
+            block->prev_data[free_data]      = used_data;
+            block->next_data[used_data]      = free_data;
+            block->prev_data[used_data]      = prev_free_data;
             return;
         }
 

@@ -290,6 +290,7 @@ public:
 
     qboolean PowerupActive(void);
 
+    using Entity::setModel;
     void             setModel(const char *mdl);
     void             Archive(Archiver& arc) override;
     void             ArchivePersistantData(Archiver& arc);

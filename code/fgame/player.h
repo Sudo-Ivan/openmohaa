@@ -902,6 +902,7 @@ public:
     void EventEnterIntermission(Event *ev);
     void EventSetPerferredWeapon(Event *ev);
 
+    using Entity::BlocksAIMovement;
     bool BlocksAIMovement();
 
     //====

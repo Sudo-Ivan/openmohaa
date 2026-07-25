@@ -188,7 +188,7 @@ con_arrayset<key, value>::~con_arrayset()
 }
 
 template<typename key, typename value>
-void con_arrayset<key, value>::resize(int count)
+void con_arrayset<key, value>::resize(int newcount)
 {
     Entry      **oldReverseTable = reverseTable;
     Entry      **oldTable        = table;
@@ -197,7 +197,7 @@ void con_arrayset<key, value>::resize(int count)
     unsigned int oldTableLength = tableLength;
     unsigned int i;
 
-    if (count > 0) {
+    if (newcount > 0) {
         tableLength += count;
         threshold = tableLength;
     } else {

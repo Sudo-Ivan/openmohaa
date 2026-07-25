@@ -4827,7 +4827,9 @@ void ScriptThread::EventRegisterCommand(Event *ev)
 
     m_scriptCmds.addKeyValue(ev->GetString(1)) = scriptLabel;
 
-    ev->AddValue(scriptLabel.GetThread());
+    ScriptVariable ret;
+    scriptLabel.GetScriptValue(&ret);
+    ev->AddValue(ret);
 }
 
 void ScriptThread::CreateHUD(Event *ev)

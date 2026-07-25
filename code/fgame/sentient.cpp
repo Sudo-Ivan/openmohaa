@@ -2102,7 +2102,7 @@ void Sentient::Archive(Archiver& arc)
     arc.ArchiveBool(&weapons_holstered_by_code);
     lastActiveWeapon.Archive(arc);
 
-    for (int i = 0; i < MAX_DAMAGE_MULTIPLIERS; i++) {
+    for (i = 0; i < MAX_DAMAGE_MULTIPLIERS; i++) {
         arc.ArchiveFloat(&m_fDamageMultipliers[i]);
     }
 
@@ -2230,8 +2230,6 @@ void Sentient::ArchivePersistantData(Archiver& arc)
     // archive each item
     for (i = 1; i <= num; i++) {
         if (arc.Saving()) {
-            Entity *ent;
-
             ent = G_GetEntity(inventory.ObjectAt(i));
             if (ent && ent->isSubclassOf(Item)) {
                 item   = (Item *)ent;
@@ -2275,20 +2273,20 @@ void Sentient::ArchivePersistantData(Archiver& arc)
     arc.ArchiveInteger(&num);
     // archive each item
     for (i = 1; i <= num; i++) {
-        str   name;
-        int   amount;
+        str   ammoName;
+        int   ammoAmount;
         int   maxamount;
         Ammo *ptr;
 
         if (arc.Saving()) {
-            ptr       = ammo_inventory.ObjectAt(i);
-            name      = ptr->getName();
-            amount    = ptr->getAmount();
-            maxamount = ptr->getMaxAmount();
+            ptr        = ammo_inventory.ObjectAt(i);
+            ammoName   = ptr->getName();
+            ammoAmount = ptr->getAmount();
+            maxamount  = ptr->getMaxAmount();
         }
 
-        arc.ArchiveString(&name);
-        arc.ArchiveInteger(&amount);
+        arc.ArchiveString(&ammoName);
+        arc.ArchiveInteger(&ammoAmount);
         arc.ArchiveInteger(&maxamount);
 
         if (arc.Loading()) {

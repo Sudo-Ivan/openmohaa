@@ -1862,11 +1862,11 @@ typedef enum {
 #define WEAPON_COMMAND_MAX_VER6		15
 #define WEAPON_COMMAND_MAX_VER17	31
 
-static unsigned int GetWeaponCommandMask(unsigned int maxCmds) {
+static inline unsigned int GetWeaponCommandMask(unsigned int maxCmds) {
 	return maxCmds << 7;
 }
 
-static unsigned int GetWeaponCommand(unsigned int buttons, unsigned int maxCmds) {
+static inline unsigned int GetWeaponCommand(unsigned int buttons, unsigned int maxCmds) {
     return (buttons & (maxCmds << 7)) >> 7;
 }
 

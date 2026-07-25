@@ -50,23 +50,23 @@ protected:
     void Move(SafePtrBase&& other);
 };
 
-inline void SafePtrBase::AddReference(Class *ptr)
+inline void SafePtrBase::AddReference(Class *newptr)
 {
-    if (!ptr->SafePtrList) {
-        ptr->SafePtrList = this;
+    if (!newptr->SafePtrList) {
+        newptr->SafePtrList = this;
         LL_Reset(this, next, prev);
     } else {
-        LL_Add(ptr->SafePtrList, this, next, prev);
+        LL_Add(newptr->SafePtrList, this, next, prev);
     }
 }
 
-inline void SafePtrBase::RemoveReference(Class *ptr)
+inline void SafePtrBase::RemoveReference(Class *newptr)
 {
-    if (ptr->SafePtrList == this) {
-        if (ptr->SafePtrList->next == this) {
-            ptr->SafePtrList = nullptr;
+    if (newptr->SafePtrList == this) {
+        if (newptr->SafePtrList->next == this) {
+            newptr->SafePtrList = nullptr;
         } else {
-            ptr->SafePtrList = next;
+            newptr->SafePtrList = next;
             LL_Remove(this, next, prev);
         }
     } else {

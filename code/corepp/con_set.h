@@ -101,9 +101,9 @@ public:
     void operator delete(void *ptr) { con_set<k, v>::DeleteEntry(ptr); }
 
     con_set_Entry()
-        : key(k())
+        : next(NULL)
+        , key(k())
         , value(v())
-        , next(NULL)
     {}
 
 #ifdef ARCHIVE_SUPPORTED
@@ -246,7 +246,7 @@ void con_set<key, value>::clear()
 }
 
 template<typename key, typename value>
-void con_set<key, value>::resize(int count)
+void con_set<key, value>::resize(int newcount)
 {
     Entry      **oldTable = table;
     Entry       *e, *old;
@@ -254,7 +254,7 @@ void con_set<key, value>::resize(int count)
     unsigned int i;
     unsigned int index;
 
-    if (count > 0) {
+    if (newcount > 0) {
         tableLength += count;
         threshold = tableLength;
     } else {

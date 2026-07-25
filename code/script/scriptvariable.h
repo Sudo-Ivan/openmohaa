@@ -49,7 +49,7 @@ enum variabletype {
     VARIABLE_MAX
 };
 
-static const char *typenames[] = {
+static inline const char *typenames[] = {
     "none",
     "string",
     "int",

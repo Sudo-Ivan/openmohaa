@@ -1252,6 +1252,7 @@ public:
     void         EventGiveWeaponInternal(Event *ev);
     void         EventGiveWeapon(Event *ev);
     void         EventGetWeapon(Event *ev);
+    using Sentient::FireWeapon;
     void         FireWeapon(Event *ev);
     bool         FriendlyInLineOfFire(Entity *other); // Added in 2.0
     Vector       VirtualEyePosition();                // Added in 2.0

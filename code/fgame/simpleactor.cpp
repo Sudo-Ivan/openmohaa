@@ -271,10 +271,10 @@ void SimpleActor::SetPathWithinDistance(Vector vDestPos, char *description, floa
     if (!PathExists()) {
         if (g_patherror->integer && description
             && (g_patherror->integer
-                || g_patherror->integer == 2
-                       && (static_cast<Actor *>(this)->m_ThinkState == THINKSTATE_IDLE
-                           || static_cast<Actor *>(this)->m_ThinkState == THINKSTATE_CURIOUS)
-                       && m_bPathErrorTime + 5000 < level.inttime)) {
+                || (g_patherror->integer == 2
+                    && (static_cast<Actor *>(this)->m_ThinkState == THINKSTATE_IDLE
+                        || static_cast<Actor *>(this)->m_ThinkState == THINKSTATE_CURIOUS)
+                    && m_bPathErrorTime + 5000 < level.inttime))) {
             m_bPathErrorTime = level.inttime;
 
             Com_Printf(
@@ -663,8 +663,6 @@ void SimpleActor::ChangeSayAnim(void)
 
 void SimpleActor::StopAnimating(int slot)
 {
-    int index = 0;
-
     m_weightType[slot] = ANIM_WEIGHT_NONE;
     DoExitCommands(slot);
 

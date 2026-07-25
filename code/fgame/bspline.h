@@ -123,7 +123,7 @@ inline void BSplineControlPoint::Set(Vector pos, float pointspeed)
     position = pos;
 }
 
-inline void BSplineControlPoint::Set(Vector pos, Vector orient, float speed)
+inline void BSplineControlPoint::Set(Vector pos, Vector orient, float pointspeed)
 {
     position = pos;
     orient.AngleVectors(&orientation, NULL, NULL);
@@ -134,7 +134,7 @@ inline void BSplineControlPoint::Set(Vector pos, Vector orient, float speed)
     if (roll < -180) {
         roll += 360;
     }
-    this->speed = speed;
+    speed = pointspeed;
 }
 
 inline void BSplineControlPoint::Get(Vector& pos)
@@ -147,11 +147,11 @@ inline Vector *BSplineControlPoint::GetPosition(void)
     return &position;
 }
 
-inline void BSplineControlPoint::Get(Vector& pos, Vector& orient, float& speed)
+inline void BSplineControlPoint::Get(Vector& pos, Vector& orient, float& pointspeed)
 {
-    pos    = position;
-    orient = orientation;
-    speed  = this->speed;
+    pos       = position;
+    orient    = orientation;
+    pointspeed = speed;
 }
 
 inline Vector *BSplineControlPoint::GetOrientation(void)
