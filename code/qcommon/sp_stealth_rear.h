@@ -22,23 +22,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #pragma once
 
-#include "../qcommon/q_shared.h"
+#include "q_shared.h"
 
-typedef struct skillCombatProfile_s {
-    float aimScatterMult;
-    float accuracyMult;
-    float noticeMult;
-    float soundAwarenessMult;
-    float grenadeAwarenessMult;
-    float coverHoldMult;
-    float shareEnemyDelay;
-    float stepSideBias;
-    float runAndShootStayChance;
-    float suppressScatterMult;
-    float footstepCuriousMult;
-} skillCombatProfile_t;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void                          SkillCombatProfile_Init(void);
-void                          SkillCombatProfile_SetMap(const char *mapname);
-const skillCombatProfile_t   *SkillCombatProfile_Get(void);
-qboolean                      SkillCombatProfile_Active(void);
+float SpStealth_DotThresholdForRearDeg(float rearDeg);
+qboolean SpStealth_DotInRearBlindArc(float forwardDot, float rearDeg);
+
+#ifdef __cplusplus
+}
+#endif

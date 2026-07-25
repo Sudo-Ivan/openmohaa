@@ -105,7 +105,10 @@ OpenMoHAA can tune client frame pacing, loading UI refresh, post-load memory tou
 | `com_touchMemory` | `-1` auto, `0` off, `1` on | Whether to walk allocated memory after registration to warm caches. Auto skips on low RAM. |
 | `com_perf_notify` | `0` / `1` (default on) | Print resolved profile to the console when applied. |
 | `com_saveSliceMs` | milliseconds (default `4`) | Max time per frame for deferred save compression and disk write. |
-| `g_sp_population_scale` | float (default `1`, set by profile) | SP only: scales AI vision distance and death-spawn chances on modern hardware. |
+| `g_sp_population_scale` | float (default `1`, set by profile) | SP only: scales death-spawn chances on modern hardware. |
+| `g_sp_vision_scale` | float (default `1`, set by profile) | SP only: multiplies world AI vision distance separately from spawn scale. |
+| `g_sp_stealth_debug` | `0` / `1` | SP only: log enemy confirm reasons (squad share, footsteps, direct confirm). |
+| `g_sp_rear_stealth_deg` | degrees (default `100`) | SP only: rear blind arc width for visual notice. |
 
 Commands:
 

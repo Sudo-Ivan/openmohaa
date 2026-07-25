@@ -281,6 +281,7 @@ public:
 
     // Path variables
     float              stealthMovementScale; // how much it will notify AIs
+    qboolean           m_bMovementStealthScript;
     class pathway_ref *m_BlockedPaths;
     int                m_iNumBlockedPaths;
 
@@ -574,6 +575,7 @@ public:
 
     void DetachAllChildren(Event *ev);
     void SetMovementStealth(float fStealthScale);
+    qboolean HasMovementStealthOverride(void) const;
     void EventMovementStealth(Event *ev);
 
     virtual void VelocityModified(void);

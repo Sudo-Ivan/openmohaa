@@ -41,6 +41,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "navigation_recast_load.h"
 #include "skill_combat_profile.h"
 #include "sp_population.h"
+#include "sp_stealth.h"
 
 #include "archive.h"
 #include "../corepp/tiki.h"
@@ -272,6 +273,7 @@ void G_InitGame(int levelTime, int randomSeed)
     CVAR_Init();
 
     SkillCombatProfile_Init();
+    SpStealth_Init();
     SpPopulation_Init();
 
     game.Vars()->ClearList();

@@ -34,6 +34,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "scriptslave.h"
 #include "explosion.h"
 #include "skill_combat_profile.h"
+#include "sp_stealth.h"
 #include "misc.h"
 #include "playerstart.h"
 #include "characterstate.h"
@@ -3950,6 +3951,22 @@ bool Actor::InFOV(Vector pos, float check_fov, float check_fovdot)
     }
 
     return Square(fDot) > (delta.lengthXYSquared() * Square(check_fovdot));
+}
+
+float Actor::ForwardDot2DTo(const Vector& targetOrigin)
+{
+    Vector delta;
+    float  len;
+
+    delta = targetOrigin - VirtualEyePosition();
+    delta.z = 0.0f;
+    len     = delta.length();
+    if (len < 1.0f) {
+        return 1.0f;
+    }
+
+    delta *= (1.0f / len);
+    return DotProduct2D(m_vEyeDir, delta);
 }
 
 /*
@@ -9250,10 +9267,25 @@ void Actor::CuriousSound(int iType, vec3_t sound_origin, float fDistSquared, flo
         }
     }
 
-    if ((fRangeFactor * m_fSoundAwareness
-         * (SkillCombatProfile_Active() ? SkillCombatProfile_Get()->soundAwarenessMult : 1.0f))
-        < random() * 100.0) {
-        return;
+    {
+        float soundMult = SkillCombatProfile_Active() ? SkillCombatProfile_Get()->soundAwarenessMult : 1.0f;
+
+        if (SpStealth_Active() && iType == AI_EVENT_FOOTSTEP) {
+            if (SkillCombatProfile_Active()) {
+                soundMult *= SkillCombatProfile_Get()->footstepCuriousMult;
+            }
+            if (SpStealth_SoundOriginInRearArc(this, sound_origin)) {
+                soundMult *= 0.55f;
+            }
+        }
+
+        if ((fRangeFactor * m_fSoundAwareness * soundMult) < random() * 100.0) {
+            return;
+        }
+    }
+
+    if (SpStealth_Active() && iType == AI_EVENT_FOOTSTEP) {
+        SpStealth_LogConfirm("curious_footstep", this, NULL);
     }
 
     RaiseAlertnessForEventType(iType);
@@ -9354,6 +9386,7 @@ void Actor::WeaponSound(int iType, vec3_t sound_origin, float fDistSquared, floa
 
     if (pEnemy && m_PotentialEnemies.CaresAboutPerfectInfo(pEnemy) && NoticeShot(pOwner, pEnemy, sqrt(fDistSquared))) {
         if (pOwner->m_Team != m_Team) {
+            SpStealth_LogConfirm("confirm_weapon", this, pOwner);
             m_PotentialEnemies.ConfirmEnemy(this, pOwner);
         }
 
@@ -9389,6 +9422,8 @@ void Actor::FootstepSound(vec3_t sound_origin, float fDistSquared, float fMaxDis
     if (!NoticeFootstep(static_cast<Sentient *>(originator))) {
         return;
     }
+
+    SpStealth_LogConfirm("footstep_heard", this, static_cast<Sentient *>(originator));
 
     CuriousSound(AI_EVENT_FOOTSTEP, sound_origin, fDistSquared, fMaxDistSquared);
 }

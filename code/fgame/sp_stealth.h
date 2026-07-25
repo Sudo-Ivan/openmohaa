@@ -24,21 +24,22 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "../qcommon/q_shared.h"
 
-typedef struct skillCombatProfile_s {
-    float aimScatterMult;
-    float accuracyMult;
-    float noticeMult;
-    float soundAwarenessMult;
-    float grenadeAwarenessMult;
-    float coverHoldMult;
-    float shareEnemyDelay;
-    float stepSideBias;
-    float runAndShootStayChance;
-    float suppressScatterMult;
-    float footstepCuriousMult;
-} skillCombatProfile_t;
+class Actor;
+class Player;
+class Sentient;
 
-void                          SkillCombatProfile_Init(void);
-void                          SkillCombatProfile_SetMap(const char *mapname);
-const skillCombatProfile_t   *SkillCombatProfile_Get(void);
-qboolean                      SkillCombatProfile_Active(void);
+void     SpStealth_Init(void);
+qboolean SpStealth_Active(void);
+
+void SpStealth_LogConfirm(const char *reason, Actor *actor, Sentient *enemy);
+
+float SpStealth_RearArcDotThreshold(void);
+qboolean SpStealth_IsInRearBlindArc(Actor *actor, const vec3_t targetOrigin);
+qboolean SpStealth_SoundOriginInRearArc(Actor *actor, const vec3_t soundOrigin);
+
+float SpStealth_VisionScale(void);
+float SpStealth_FootstepEventRadius(float baseRadius, Sentient *pedestrian);
+float SpStealth_EffectiveNoticeMult(float profileNoticeMult, Sentient *enemy);
+
+void SpStealth_UpdatePlayerStance(Player *player);
+void SpStealth_ApplySquadShareAwareness(Actor *receiver, Actor *sharer, Sentient *enemy);

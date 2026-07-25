@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "entity.h"
 #include "consoleevent.h"
 #include "player.h"
+#include "sp_stealth.h"
 #include "worldspawn.h"
 #include "weapon.h"
 #include "trigger.h"
@@ -4542,6 +4543,10 @@ void Player::ClientThink(void)
             VehicleMove(current_ucmd);
         } else {
             ClientMove(current_ucmd);
+        }
+
+        if (g_gametype->integer == GT_SINGLE_PLAYER && !camera) {
+            SpStealth_UpdatePlayerStance(this);
         }
 
         // Save cmd angles so that we can get delta angle movements next frame

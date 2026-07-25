@@ -40,6 +40,7 @@ file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/code/parser/generated")
 list(APPEND GAME_SOURCES
     ${BISON_fgame-parser_OUTPUTS}
     ${FLEX_fgame-lexer_OUTPUTS}
+    ${SOURCE_DIR}/qcommon/sp_stealth_rear.c
 )
 
 set(GAME_BINARY_SOURCES)

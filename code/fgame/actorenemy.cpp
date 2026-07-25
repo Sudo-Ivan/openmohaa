@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "sentient.h"
 #include "actor.h"
 #include "skill_combat_profile.h"
+#include "sp_stealth.h"
 #include "gamecvars.h"
 
 float ActorEnemy::UpdateLMRF(Actor *pSelf, bool *pbInFovAndRange, bool *pbVisible)
@@ -68,6 +69,10 @@ float ActorEnemy::UpdateLMRF(Actor *pSelf, bool *pbInFovAndRange, bool *pbVisibl
         return 8.0;
     }
 
+    if (SpStealth_Active() && SpStealth_IsInRearBlindArc(pSelf, m_pEnemy->origin)) {
+        return 8.0;
+    }
+
     fMinSightTime += 128;
     if (pSelf->m_fFovDot * fForward > fMinSightTime) {
         return 8.0;
@@ -95,7 +100,9 @@ float ActorEnemy::UpdateLMRF(Actor *pSelf, bool *pbInFovAndRange, bool *pbVisibl
     fLMRF = Square(m_pEnemy->stealthMovementScale * fNormalizedRange) * (fForward + 128.0) / fMinSightTime;
     fLMRF *= pSelf->m_fNoticeTimeScale * g_ai_noticescale->value;
     if (SkillCombatProfile_Active()) {
-        fLMRF /= SkillCombatProfile_Get()->noticeMult;
+        float noticeMult = SkillCombatProfile_Get()->noticeMult;
+        noticeMult       = SpStealth_EffectiveNoticeMult(noticeMult, m_pEnemy);
+        fLMRF /= noticeMult;
     }
     if (fLMRF < fFovScale) {
         return fFovScale;
@@ -496,6 +503,8 @@ void ActorEnemySet::ConfirmEnemy(Actor *pSelf, Sentient *pEnemy)
     pActorEnemy->m_fTotalVisibility = 1.0;
     pActorEnemy->m_vLastKnownPos    = pEnemy->origin;
 
+    SpStealth_LogConfirm("confirm_direct", pSelf, pEnemy);
+
     if (m_fCurrentVisibility < 1.0) {
         m_iCurrentThreat     = pActorEnemy->UpdateThreat(pSelf);
         m_fCurrentVisibility = 1.0;
@@ -513,8 +522,6 @@ void ActorEnemySet::ConfirmEnemyIfCanSeeSharerOrEnemy(Actor *pSelf, Actor *pShar
         return;
     }
 
-    // Added in 2.0.
-    //  Ignore if below reaction time
     if (level.inttime < pActorEnemy->m_iNextEnemyTime) {
         return;
     }
@@ -526,6 +533,11 @@ void ActorEnemySet::ConfirmEnemyIfCanSeeSharerOrEnemy(Actor *pSelf, Actor *pShar
 
     if (!pActorEnemy->m_bVisible
         && !pSelf->CanSee(pSharer, pSelf->m_bSilent ? 90 : 0, world->farplane_distance * 0.828f, false)) {
+        return;
+    }
+
+    if (SpStealth_Active()) {
+        SpStealth_ApplySquadShareAwareness(pSelf, pSharer, pEnemy);
         return;
     }
 

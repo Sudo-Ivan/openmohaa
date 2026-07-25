@@ -1298,6 +1298,7 @@ public:
     bool           EnemyInFOV(int iMaxDirtyTime);
     bool           InFOV(Vector pos);
     bool           InFOV(Entity *ent);
+    float          ForwardDot2DTo(const Vector& targetOrigin);
     bool           CanSeeNoFOV(Entity *ent);
     bool           CanSeeFOV(Entity *ent);
     bool           CanSeeEnemyFOV(int iMaxFovDirtyTime, int iMaxSightDirtyTime);

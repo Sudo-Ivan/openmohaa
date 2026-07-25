@@ -31,6 +31,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "weaputils.h"
 #include "scriptmaster.h"
 #include "scriptexception.h"
+#include "sp_stealth.h"
 #include "ammo.h"
 #include "armor.h"
 #include "misc.h"
@@ -2938,7 +2939,11 @@ void Sentient::UpdateFootsteps(void)
         iTagNum = gi.Tag_NumForName(edict->tiki, "Bip01 R Foot");
         if (iTagNum >= 0) {
             if (G_TIKI_IsOnGround(edict, iTagNum, 13.461539f)) {
-                BroadcastAIEvent(AI_EVENT_FOOTSTEP, G_AIEventRadius(AI_EVENT_FOOTSTEP));
+                float footRadius = G_AIEventRadius(AI_EVENT_FOOTSTEP);
+                if (g_gametype->integer == GT_SINGLE_PLAYER) {
+                    footRadius = SpStealth_FootstepEventRadius(footRadius, this);
+                }
+                BroadcastAIEvent(AI_EVENT_FOOTSTEP, footRadius);
                 // simulate footstep sounds
                 Footstep("Bip01 L Foot", (iAnimFlags & TAF_AUTOSTEPS_RUNNING), (iAnimFlags & TAF_AUTOSTEPS_EQUIPMENT));
                 m_bFootOnGround_Right = true;
@@ -2959,7 +2964,11 @@ void Sentient::UpdateFootsteps(void)
         iTagNum = gi.Tag_NumForName(edict->tiki, "Bip01 L Foot");
         if (iTagNum >= 0) {
             if (G_TIKI_IsOnGround(edict, iTagNum, 13.461539f)) {
-                BroadcastAIEvent(AI_EVENT_FOOTSTEP, G_AIEventRadius(AI_EVENT_FOOTSTEP));
+                float footRadius = G_AIEventRadius(AI_EVENT_FOOTSTEP);
+                if (g_gametype->integer == GT_SINGLE_PLAYER) {
+                    footRadius = SpStealth_FootstepEventRadius(footRadius, this);
+                }
+                BroadcastAIEvent(AI_EVENT_FOOTSTEP, footRadius);
                 // simulate footstep sounds
                 Footstep("Bip01 R Foot", (iAnimFlags & TAF_AUTOSTEPS_RUNNING), (iAnimFlags & TAF_AUTOSTEPS_EQUIPMENT));
                 m_bFootOnGround_Left = true;

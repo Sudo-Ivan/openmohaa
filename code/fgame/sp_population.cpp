@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "sp_population.h"
+#include "sp_stealth.h"
 #include "gamecvars.h"
 #include "worldspawn.h"
 
@@ -47,18 +48,18 @@ float SpPopulation_Scale(void)
 
 void SpPopulation_ApplyWorld(World *levelWorld)
 {
-    float scale;
+    float visionScale;
 
     if (!levelWorld || !g_gametype || g_gametype->integer != GT_SINGLE_PLAYER) {
         return;
     }
 
-    scale = SpPopulation_Scale();
-    if (scale <= 1.0f) {
+    visionScale = SpStealth_VisionScale();
+    if (visionScale <= 1.0f) {
         return;
     }
 
-    levelWorld->m_fAIVisionDistance *= scale;
+    levelWorld->m_fAIVisionDistance *= visionScale;
 }
 
 float SpPopulation_ScaledChance(float baseChance)

@@ -36,12 +36,13 @@ typedef struct skillCombatProfile_s {
     float stepSideBias;
     float runAndShootStayChance;
     float suppressScatterMult;
+    float footstepCuriousMult;
 } skillCombatProfile_t;
 
 static const skillCombatProfile_t skillProfiles[3] = {
-    {1.20f, 0.85f, 0.75f, 0.80f, 0.70f, 1.35f, 1.10f, 0.15f, 0.10f, 1.15f},
-    {1.00f, 1.00f, 1.00f, 1.00f, 1.00f, 1.00f, 0.75f, 0.35f, 0.25f, 1.00f},
-    {0.55f, 1.35f, 1.45f, 1.40f, 1.35f, 0.65f, 0.35f, 0.70f, 0.55f, 0.80f},
+    {1.20f, 0.85f, 0.75f, 0.80f, 0.70f, 1.35f, 1.10f, 0.15f, 0.10f, 1.15f, 1.00f},
+    {1.00f, 1.00f, 1.00f, 1.00f, 1.00f, 1.00f, 0.75f, 0.35f, 0.25f, 1.00f, 1.00f},
+    {0.55f, 1.35f, 1.45f, 1.15f, 1.35f, 0.65f, 0.65f, 0.70f, 0.55f, 0.80f, 0.88f},
 };
 
 static int failures;

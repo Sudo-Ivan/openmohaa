@@ -1788,6 +1788,7 @@ Entity::Entity()
     lightRadius = 0;
 
     stealthMovementScale = 1.0f;
+    m_bMovementStealthScript = qfalse;
     m_iNumBlockedPaths   = 0;
     m_BlockedPaths       = NULL;
 
@@ -5146,11 +5147,17 @@ qboolean Entity::CheckEventFlags(Event *event)
 
 void Entity::SetMovementStealth(float fStealthScale)
 {
+    m_bMovementStealthScript = qtrue;
     if (fStealthScale < 0.0f) {
         stealthMovementScale = 0.0f;
     } else {
         stealthMovementScale = fStealthScale;
     }
+}
+
+qboolean Entity::HasMovementStealthOverride(void) const
+{
+    return m_bMovementStealthScript;
 }
 
 void Entity::EventMovementStealth(Event *ev)

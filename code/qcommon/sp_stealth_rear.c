@@ -20,25 +20,26 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
-#pragma once
+#include "sp_stealth_rear.h"
 
-#include "../qcommon/q_shared.h"
+#include <math.h>
 
-typedef struct skillCombatProfile_s {
-    float aimScatterMult;
-    float accuracyMult;
-    float noticeMult;
-    float soundAwarenessMult;
-    float grenadeAwarenessMult;
-    float coverHoldMult;
-    float shareEnemyDelay;
-    float stepSideBias;
-    float runAndShootStayChance;
-    float suppressScatterMult;
-    float footstepCuriousMult;
-} skillCombatProfile_t;
+float SpStealth_DotThresholdForRearDeg(float rearDeg)
+{
+    float blindHalf;
 
-void                          SkillCombatProfile_Init(void);
-void                          SkillCombatProfile_SetMap(const char *mapname);
-const skillCombatProfile_t   *SkillCombatProfile_Get(void);
-qboolean                      SkillCombatProfile_Active(void);
+    if (rearDeg < 0.0f) {
+        rearDeg = 0.0f;
+    }
+    if (rearDeg > 180.0f) {
+        rearDeg = 180.0f;
+    }
+
+    blindHalf = 90.0f + (180.0f - rearDeg) * 0.5f;
+    return cosf(blindHalf * (float)M_PI / 180.0f);
+}
+
+qboolean SpStealth_DotInRearBlindArc(float forwardDot, float rearDeg)
+{
+    return forwardDot < SpStealth_DotThresholdForRearDeg(rearDeg) ? qtrue : qfalse;
+}
