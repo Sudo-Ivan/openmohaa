@@ -2661,7 +2661,7 @@ static void R_CreateDlightImage( void ) {
 			data[y][x][3] = 255;			
 		}
 	}
-	tr.dlightImage = R_CreateImageOld("*dlight", (byte *)data, DLIGHT_SIZE, DLIGHT_SIZE, 0, 1, qfalse, qfalse, qfalse, qfalse, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+	tr.dlightImage = R_CreateImageOld("*dlight", (byte *)data, DLIGHT_SIZE, DLIGHT_SIZE, 0, 1, qfalse, qfalse, qfalse, qfalse, GL_CLAMP, GL_CLAMP);
 	tr.dlightImage->r_sequence = -1;
 }
 
@@ -2736,14 +2736,14 @@ void R_CreateBuiltinImages(void) {
 		char filename[64];
 
 		Com_sprintf(filename, sizeof(filename), "*lightmapD%i", i);
-		tr.dlightImages[i] = R_CreateImageOld(filename, lightmap_buffer, LIGHTMAP_SIZE, LIGHTMAP_SIZE, 0, 1, qfalse, qfalse, qfalse, 0, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+		tr.dlightImages[i] = R_CreateImageOld(filename, lightmap_buffer, LIGHTMAP_SIZE, LIGHTMAP_SIZE, 0, 1, qfalse, qfalse, qfalse, 0, GL_CLAMP, GL_CLAMP);
 		tr.dlightImages[i]->r_sequence = -1;
 	}
 
 	tr.identityLightImage = R_CreateImageOld("*identityLight", (byte *)data, 8, 8, 0, 1, qfalse, qfalse, qfalse, qfalse, GL_REPEAT, GL_REPEAT);
 	tr.identityLightImage->r_sequence = -1;
 
-	tr.scratchImage = R_CreateImageOld("*scratch", (byte*)data, DEFAULT_SIZE, DEFAULT_SIZE, 0, 1, r_picmip->integer, qfalse, qfalse, qfalse, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+	tr.scratchImage = R_CreateImageOld("*scratch", (byte*)data, DEFAULT_SIZE, DEFAULT_SIZE, 0, 1, r_picmip->integer, qfalse, qfalse, qfalse, GL_CLAMP, GL_CLAMP);
 	tr.scratchImage->r_sequence = -1;
 
 	R_CreateDlightImage();

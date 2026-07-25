@@ -258,10 +258,10 @@ static	void R_LoadLightmaps(gamelump_t* l) {
             }
         }
         tr.lightmaps[i] = R_CreateImageOld(va("*lightmap%d", i), image,
-            LIGHTMAP_SIZE, LIGHTMAP_SIZE, 0, 1, qfalse, qfalse, qfalse, qfalse, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+            LIGHTMAP_SIZE, LIGHTMAP_SIZE, 0, 1, qfalse, qfalse, qfalse, qfalse, GL_CLAMP, GL_CLAMP);
     }
 
-    ri.Printf(PRINT_ALL, "R_LoadLightmaps: %d lightmaps (%dx%d) wrap=GL_CLAMP_TO_EDGE %d ms\n",
+    ri.Printf(PRINT_ALL, "R_LoadLightmaps: %d lightmaps (%dx%d) wrap=GL_CLAMP %d ms\n",
         tr.numLightmaps, LIGHTMAP_SIZE, LIGHTMAP_SIZE, ri.Milliseconds() - tStart);
 
     if ( r_lightmap->integer == 2 )	{
@@ -2208,10 +2208,6 @@ R_LoadLump
 Loads a lump from the BSP file
 ==================
 */
-// Cached BSP data from collision loader; avoids re-reading the file
-static const byte *s_bspCacheData = NULL;
-static int         s_bspCacheLength = 0;
-
 int R_LoadLump(fileHandle_t handle, lump_t* lump, gamelump_t* glump, int size)
 {
     glump->buffer = NULL;
@@ -2220,14 +2216,10 @@ int R_LoadLump(fileHandle_t handle, lump_t* lump, gamelump_t* glump, int size)
     if (lump->filelen) {
         glump->buffer = ri.Hunk_AllocateTempMemory(lump->filelen);
 
-        if (s_bspCacheData && lump->fileofs + lump->filelen <= s_bspCacheLength) {
-            memcpy(glump->buffer, s_bspCacheData + lump->fileofs, lump->filelen);
-        } else {
-            if (ri.FS_Seek(handle, lump->fileofs, FS_SEEK_SET) < 0) {
-                Com_Error(ERR_DROP, "R_LoadLump: Error seeking to lump.");
-            }
-            ri.FS_Read(glump->buffer, lump->filelen, handle);
+        if (ri.FS_Seek(handle, lump->fileofs, FS_SEEK_SET) < 0) {
+            Com_Error(ERR_DROP, "R_LoadLump: Error seeking to lump.");
         }
+        ri.FS_Read(glump->buffer, lump->filelen, handle);
 
         if (size) {
             return lump->filelen / size;
@@ -2268,14 +2260,8 @@ void RE_LoadWorldMap( const char *name ) {
     dheader_t	header;
     fileHandle_t	h;
     int				length;
-    int				cacheChecksum;
     vec3_t			vDefSundir;
     gamelump_t		lump, lump2, lump3;
-
-    // OPM: disabled for debugging — suspected of causing texture artifacts
-    // s_bspCacheData = NULL;
-    // s_bspCacheLength = 0;
-    // CM_GetBSPCache(name, &s_bspCacheData, &s_bspCacheLength, &cacheChecksum);
 
     vDefSundir[0] = 0.45f;
     vDefSundir[1] = 0.3f;
@@ -2288,8 +2274,7 @@ void RE_LoadWorldMap( const char *name ) {
     VectorCopy(vDefSundir, tr.sunDirection);
     VectorNormalize( tr.sunDirection );
 
-    ri.Printf(PRINT_ALL, "RE_LoadWorldMap: %s (%d bytes)\n", name, length);
-    ri.Printf(PRINT_ALL, "  BSP cache: %s\n", s_bspCacheData ? "HIT" : "MISS (reading from file)");
+    ri.Printf(PRINT_ALL, "RE_LoadWorldMap: %s\n", name);
 
     // load it
     length = ri.FS_OpenFile(name, &h, qtrue, qtrue);
