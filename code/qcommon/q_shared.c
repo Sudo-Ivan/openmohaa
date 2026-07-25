@@ -1387,6 +1387,10 @@ qboolean Q_strreplace(char *dest, int destsize, const char *find, const char *re
 		lfind = strlen(find);
 		lreplace = strlen(replace);
 
+		if (lstart + lreplace + (lend - lstart - lfind) >= destsize) {
+			return qfalse;
+		}
+
 		strncpy(s, replace, destsize - lstart - 1);
 		strncpy(s + lreplace, backup + lstart + lfind, destsize - lstart - lreplace - 1);
 
