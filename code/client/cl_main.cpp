@@ -3412,6 +3412,8 @@ void CL_InitRef( void ) {
 
 	re = *ret;
 
+	Com_ApplyPerfProfileRenderer();
+
 	// unpause so the cgame definately gets a snapshot and renders a frame
 	Cvar_Set( "cl_paused", "0" );
 

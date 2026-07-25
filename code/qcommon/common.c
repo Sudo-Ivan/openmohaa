@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "q_shared.h"
 #include "qcommon.h"
+#include "com_perf.h"
 #include "q_version.h"
 #include <setjmp.h>
 #ifndef _WIN32
@@ -2022,6 +2023,9 @@ void Com_Init( char *commandLine ) {
     // Added in OPM
     //  Initialize GameSpy related stuff
     Com_InitGameSpy();
+
+	Com_PerfInit();
+	Com_ApplyPerfProfileCommon();
 
 	iEnd = Sys_Milliseconds();
 	Com_Printf( "--- Common Initialization Complete --- %i ms\n", iEnd - iStart );

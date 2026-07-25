@@ -43,6 +43,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <sys/wait.h>
 #include <time.h>
 #include <sys/resource.h>
+#include <sys/sysinfo.h>
 
 qboolean stdinIsATTY;
 
@@ -597,7 +598,29 @@ TODO
 */
 qboolean Sys_LowPhysicalMemory( void )
 {
-	return qfalse;
+	struct sysinfo si;
+
+	if ( sysinfo( &si ) != 0 ) {
+		return qfalse;
+	}
+
+	return ( (unsigned long long)si.totalram * si.mem_unit <= MEM_THRESHOLD ) ? qtrue : qfalse;
+}
+
+/*
+==================
+Sys_TotalPhysicalMemory
+==================
+*/
+unsigned long long Sys_TotalPhysicalMemory( void )
+{
+	struct sysinfo si;
+
+	if ( sysinfo( &si ) != 0 ) {
+		return 0;
+	}
+
+	return (unsigned long long)si.totalram * si.mem_unit;
 }
 
 /*

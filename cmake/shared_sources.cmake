@@ -18,6 +18,7 @@ set(COMMON_SOURCES
     ${SOURCE_DIR}/qcommon/cm_trace_obfuscation.cpp
     ${SOURCE_DIR}/qcommon/cmd.c
     ${SOURCE_DIR}/qcommon/common.c
+    ${SOURCE_DIR}/qcommon/com_perf.c
     ${SOURCE_DIR}/qcommon/crc.c
     ${SOURCE_DIR}/qcommon/cvar.c
     ${SOURCE_DIR}/qcommon/files.cpp

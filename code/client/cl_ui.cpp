@@ -3827,13 +3827,13 @@ void CL_EndRegistration(void)
     S_EndRegistration();
     re.EndRegistration();
 
-    if (!Sys_LowPhysicalMemory()) {
+    if (Com_ShouldTouchMemoryAfterLoad()) {
         Com_TouchMemory();
     }
 
     end = Sys_Milliseconds();
 
-    Com_Printf("CL_EndRegistration: %5.2f seconds\n", (float)(start - end) / 1000.0);
+    Com_Printf("CL_EndRegistration: %5.2f seconds\n", (float)(end - start) / 1000.0f);
 }
 
 /*
@@ -5714,7 +5714,7 @@ void UI_LoadResource(const char *name)
         Cvar_SetValue("loadingbar", (float)currentLoadTime / (float)totalLoadTime);
     }
 
-    UI_TestUpdateScreen(100);
+    UI_TestUpdateScreen(Com_LoadScreenIntervalMs());
 }
 
 /*

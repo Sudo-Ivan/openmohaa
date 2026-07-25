@@ -1444,6 +1444,15 @@ void Sys_StreamSeek(fileHandle_t f, int offset, int origin);
 
 qboolean Sys_LowPhysicalMemory(void);
 
+unsigned long long Sys_TotalPhysicalMemory(void);
+
+void Com_PerfInit(void);
+int Com_PerfResolveProfile(void);
+void Com_ApplyPerfProfileCommon(void);
+void Com_ApplyPerfProfileRenderer(void);
+qboolean Com_ShouldTouchMemoryAfterLoad(void);
+int Com_LoadScreenIntervalMs(void);
+
 void Sys_SetEnv(const char* name, const char* value);
 
 void SetNormalThreadPriority( void );

@@ -335,6 +335,18 @@ qboolean Sys_LowPhysicalMemory( void )
 }
 
 /*
+==================
+Sys_TotalPhysicalMemory
+==================
+*/
+unsigned long long Sys_TotalPhysicalMemory( void )
+{
+	MEMORYSTATUS stat;
+	GlobalMemoryStatus( &stat );
+	return (unsigned long long)stat.dwTotalPhys;
+}
+
+/*
 ==============
 Sys_Basename
 ==============
