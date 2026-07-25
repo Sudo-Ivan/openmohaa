@@ -365,6 +365,15 @@ extern cvar_t *g_inactiveExempt;
 extern cvar_t *sv_announce;
 extern cvar_t *sv_announceInterval;
 extern cvar_t *g_teamSwapHalftime;
+extern cvar_t *g_voteCooldown;
+extern cvar_t *g_roundResetTime;
+extern cvar_t *sv_connectionLog;
+extern cvar_t *g_teamDamageLog;
+extern cvar_t *g_minPlayers;
+extern cvar_t *g_teamlock;
+extern cvar_t *g_autoRecordStats;
+extern cvar_t *sv_autoRestart;
+extern cvar_t *g_maxScore;
 
 void CVAR_Init(void);
 

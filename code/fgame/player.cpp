@@ -9579,6 +9579,12 @@ void Player::Join_DM_Team(Event *ev)
         return;
     }
 
+    if (g_teamlock && g_teamlock->integer && g_gametype->integer >= GT_TEAM) {
+        gi.SendServerCommand(edict - g_entities,
+            "print \"" HUD_MESSAGE_WHITE "%s\n\"", gi.LV_ConvertString("Team switching is locked."));
+        return;
+    }
+
     if (ev->isSubclassOf(ConsoleEvent) && !CheckCanSwitchTeam(team)) {
         return;
     }
@@ -9770,6 +9776,10 @@ void Player::ArmorDamage(Event *ev)
 
         if (attacker && attacker->IsSubclassOfPlayer() && attacker != this) {
             if (g_gametype->integer >= GT_TEAM && attacker->GetDM_Team() == GetDM_Team() && mod != MOD_TELEFRAG) {
+                if (g_teamDamageLog && g_teamDamageLog->integer) {
+                    gi.Printf("TEAMDAMAGE: %s damaged teammate %s for %.0f damage (mod %d)\n",
+                        attacker->client->pers.netname, client->pers.netname, ev->GetFloat(2), mod);
+                }
                 // check for team damage
                 if (g_teamdamage->integer & 2) {
                     // Reflective team-damage
@@ -9866,8 +9876,10 @@ void Player::CallVote(Event *ev)
 
     if (votecount >= MAX_VOTE_COUNT) {
         if (m_fAllowVoteTime) {
+            int cooldown = g_voteCooldown ? g_voteCooldown->integer : 60;
+            if (cooldown < 1) cooldown = 1;
             while (m_fAllowVoteTime < level.time && votecount > 0) {
-                m_fAllowVoteTime += 60;
+                m_fAllowVoteTime += cooldown;
                 votecount--;
             }
         }
@@ -10159,7 +10171,9 @@ void Player::CallVote(Event *ev)
     voted             = true;
     votecount++;
 
-    m_fAllowVoteTime = level.time + 60;
+    int cooldown = g_voteCooldown ? g_voteCooldown->integer : 60;
+    if (cooldown < 1) cooldown = 1;
+    m_fAllowVoteTime = level.time + cooldown;
 
     if (g_protocol >= protocol_e::PROTOCOL_MOHTA_MIN) {
         //
@@ -12345,6 +12359,9 @@ void Player::RemoveOwnedProjectiles()
 void Player::AddKills(int num)
 {
     num_kills += num;
+    if (g_maxScore && g_maxScore->integer > 0 && num_kills > g_maxScore->integer) {
+        num_kills = g_maxScore->integer;
+    }
 }
 
 void Player::AddDeaths(int num)

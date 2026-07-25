@@ -100,6 +100,18 @@ The time in second after which an inactive player gets kicked. Defaults to `900`
 
 The time in second after which an inactive player gets moved into spectator. Defaults to `60`
 
+### `g_autoRecordStats`
+
+If set to `1`, logs each player's kills, deaths, and hits taken to the game log at round end. Defaults to `0`.
+
+### `g_maxScore`
+
+Caps the maximum score a player can achieve. `0` means no cap. Defaults to `0`.
+
+### `g_minPlayers`
+
+The minimum number of players required before the match starts. Defaults to `0` (no minimum).
+
 ### `g_motd`
 
 The Message of the Day shown to players when they connect. Displayed in the client's console and HUD. Defaults to `""` (no message).
@@ -121,6 +133,18 @@ If enabled, a player can stand on another player's head without being pushed off
 ### `g_ragdollTime`
 
 The time in seconds before dead body ragdolls are removed. Defaults to `5`.
+
+### `g_roundResetTime`
+
+The delay in seconds before the next round starts after a round ends. Defaults to `3`.
+
+### `g_teamDamageLog`
+
+If set to `1`, logs team damage incidents to the server console. Defaults to `0`.
+
+### `g_teamlock`
+
+If set to `1`, prevents players from switching teams after the match has started. Defaults to `0`.
 
 ### `g_teamSwapHalftime`
 
@@ -148,6 +172,10 @@ Amount of team kills before the player is warned. Defaults to `3`.
 ### `g_teamswitchdelay`
 
 The minimum delay to wait before a player can switch teams again. Defaults to `15`.
+
+### `g_voteCooldown`
+
+The time in seconds a player must wait before calling another vote after their previous vote. Defaults to `60`.
 
 ### `g_voteTimeout`
 

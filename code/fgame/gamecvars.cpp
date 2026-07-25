@@ -330,6 +330,15 @@ cvar_t *g_inactiveExempt;
 cvar_t *sv_announce;
 cvar_t *sv_announceInterval;
 cvar_t *g_teamSwapHalftime;
+cvar_t *g_voteCooldown;
+cvar_t *g_roundResetTime;
+cvar_t *sv_connectionLog;
+cvar_t *g_teamDamageLog;
+cvar_t *g_minPlayers;
+cvar_t *g_teamlock;
+cvar_t *g_autoRecordStats;
+cvar_t *sv_autoRestart;
+cvar_t *g_maxScore;
 
 void CVAR_Init(void)
 {
@@ -746,6 +755,15 @@ void CVAR_Init(void)
     sv_announce        = gi.Cvar_Get("sv_announce", "", 0);
     sv_announceInterval = gi.Cvar_Get("sv_announceInterval", "120", 0);
     g_teamSwapHalftime = gi.Cvar_Get("g_teamSwapHalftime", "0", 0);
+    g_voteCooldown     = gi.Cvar_Get("g_voteCooldown", "60", CVAR_ARCHIVE);
+    g_roundResetTime   = gi.Cvar_Get("g_roundResetTime", "3", CVAR_ARCHIVE);
+    sv_connectionLog   = gi.Cvar_Get("sv_connectionLog", "0", 0);
+    g_teamDamageLog    = gi.Cvar_Get("g_teamDamageLog", "0", 0);
+    g_minPlayers       = gi.Cvar_Get("g_minPlayers", "0", 0);
+    g_teamlock         = gi.Cvar_Get("g_teamlock", "0", 0);
+    g_autoRecordStats  = gi.Cvar_Get("g_autoRecordStats", "0", 0);
+    sv_autoRestart     = gi.Cvar_Get("sv_autoRestart", "0", 0);
+    g_maxScore         = gi.Cvar_Get("g_maxScore", "0", 0);
 
     cl_running = gi.Cvar_Get("cl_running", "", 0);
 }

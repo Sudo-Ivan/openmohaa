@@ -1486,8 +1486,21 @@ void DM_Manager::EventDoRoundTransition(Event *ev)
         m_team_allies.TotalPlayersKills(), m_team_axis.TotalPlayersKills(),
         m_team_allies.m_teamwins, m_team_axis.m_teamwins);
 
+    if (g_autoRecordStats && g_autoRecordStats->integer) {
+        for (int j = 0; j < game.maxclients; j++) {
+            gentity_t *e = &g_entities[j];
+            if (!e->inuse || !e->entity || !e->client) continue;
+            Player *p = (Player *)e->entity;
+            G_LogPrintf("Stat: %s %d %d %d\n",
+                p->client->pers.netname,
+                p->GetNumKills(), p->GetNumDeaths(),
+                p->m_iNumHitsTaken);
+        }
+    }
+
     G_DisplayScoresToAllClients();
-    PostEvent(EV_DM_Manager_FinishRoundTransition, 3.0f);
+    float resetDelay = g_roundResetTime ? g_roundResetTime->value : 3.0f;
+    PostEvent(EV_DM_Manager_FinishRoundTransition, resetDelay);
 }
 
 void DM_Manager::EventFinishRoundTransition(Event *ev)
@@ -1528,6 +1541,16 @@ void DM_Manager::EventFinishRoundTransition(Event *ev)
 
     if (g_gametype->integer == GT_TOW) {
         g_TOWObjectiveMan.Reset();
+    }
+
+    if (sv_autoRestart && sv_autoRestart->integer > 0) {
+        static int mapCount = 0;
+        mapCount++;
+        if (mapCount >= sv_autoRestart->integer) {
+            mapCount = 0;
+            gi.SendConsoleCommand("quit\n");
+            return;
+        }
     }
 
     gi.SendConsoleCommand("restart\n");
@@ -1658,11 +1681,24 @@ bool DM_Manager::AllowRespawn() const
 bool DM_Manager::WaitingForPlayers(void) const
 {
     if (g_gametype->integer <= GT_TEAM) {
+        if (g_minPlayers && g_minPlayers->integer > 0) {
+            int total = m_players.NumObjects();
+            if (total < g_minPlayers->integer) {
+                return true;
+            }
+        }
         return false;
     }
 
     if (m_team_axis.IsEmpty() || m_team_allies.IsEmpty()) {
         return true;
+    }
+
+    if (g_minPlayers && g_minPlayers->integer > 0) {
+        int total = m_players.NumObjects();
+        if (total < g_minPlayers->integer) {
+            return true;
+        }
     }
 
     if (!m_team_axis.IsReady() || !m_team_allies.IsReady()) {
