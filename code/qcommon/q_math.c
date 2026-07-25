@@ -1857,7 +1857,11 @@ void MatToQuat
 		j = next[ i ];
 		k = next[ j ];
 
-		s = sqrt( ( srcMatrix[ i ][ i ] - ( srcMatrix[ j ][ j ] + srcMatrix[ k ][ k ] ) ) + 1.0 );
+		s = ( srcMatrix[ i ][ i ] - ( srcMatrix[ j ][ j ] + srcMatrix[ k ][ k ] ) ) + 1.0;
+		if ( s < 0.0f ) {
+			s = 0.0f;
+		}
+		s = sqrt( s );
 		destQuat[ i ] = s * 0.5;
 
 		s = 0.5 / s;
@@ -1939,10 +1943,8 @@ void EulerToQuat
 	)
 {
 	float mat[ 3 ][ 3 ];
-	int *i;
 
-	i = ( int * )ang;
-	if( !i[ 0 ] && !i[ 1 ] && !i[ 2 ] )
+	if( ang[ 0 ] == 0.0f && ang[ 1 ] == 0.0f && ang[ 2 ] == 0.0f )
 	{
 		q[ 0 ] = 0;
 		q[ 1 ] = 0;
