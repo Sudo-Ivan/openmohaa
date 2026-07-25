@@ -20,12 +20,15 @@ on:
         type: string
         
 env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: RelWithDebInfo
   RELEASE_STAGE: ${{ vars.RELEASE_STAGE || 'unstable' }}
 
 jobs:
   build:
+    permissions:
+      contents: read
     strategy:
       matrix:
         architecture: [
@@ -71,7 +74,7 @@ jobs:
     # Cache SDL
     - name: Cache SDL2
       id: cache-sdl2
-      uses: actions/cache@v4
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
       with:
         path: 'thirdparties/SDL2/install'
         key: ${{ runner.os }}-${{ matrix.architecture.name }}-sdl2-${{ env.sdl2-branch }}-v1
@@ -79,7 +82,7 @@ jobs:
     # SDL2 setup
     - name: Checkout SDL2
       if: steps.cache-sdl2.outputs.cache-hit != 'true'
-      uses: actions/checkout@v4
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
         repository: 'libsdl-org/SDL'
         path: 'thirdparties/SDL2'
@@ -100,7 +103,7 @@ jobs:
     ###
     - name: Cache OpenAL
       id: cache-openal-soft
-      uses: actions/cache@v4
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
       with:
         path: 'thirdparties/soft-oal/install'
         key: ${{ runner.os }}-${{ matrix.architecture.name }}-openal-soft-${{ env.openal-soft-branch }}-v1
@@ -110,7 +113,7 @@ jobs:
     # It also doesn't enable altivec support on PowerPC by default
     - name: Checkout soft-oal
       if: steps.cache-openal-soft.outputs.cache-hit != 'true'
-      uses: actions/checkout@v4
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
         repository: 'kcat/openal-soft'
         path: 'thirdparties/soft-oal'
@@ -135,7 +138,7 @@ jobs:
 #
 #    - name: Cache WolfSSL
 #      id: cache-wolfssl
-#      uses: actions/cache@v4
+#      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
 #      with:
 #        path: 'thirdparties/wolfssl_install'
 #        key: ${{ runner.os }}-${{ matrix.architecture.name }}-wolfssl-${{ env.wolfssl-version }}-v1
@@ -143,7 +146,7 @@ jobs:
 #    # WolfSSL setup
 #    - name: Checkout WolfSSL
 #      if: steps.cache-wolfssl.outputs.cache-hit != 'true'
-#      uses: actions/checkout@v4
+#      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 #      with:
 #        repository: 'wolfssl/wolfssl'
 #        path: 'thirdparties/wolfssl'
@@ -166,7 +169,7 @@ jobs:
     ###
     - name: Cache cURL
       id: cache-curl
-      uses: actions/cache@v4
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
       with:
         path: 'thirdparties/curl/install'
         key: ${{ runner.os }}-${{ matrix.architecture.name }}-curl-${{ env.curl-version }}-v1
@@ -174,7 +177,7 @@ jobs:
     # cURL setup
     - name: Checkout cURL
       if: steps.cache-curl.outputs.cache-hit != 'true'
-      uses: actions/checkout@v4
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
         repository: 'curl/curl'
         path: 'thirdparties/curl'
@@ -205,7 +208,7 @@ jobs:
     # Project
     ###
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
         path: 'source'
 
@@ -253,7 +256,7 @@ jobs:
     # Artifacts
     ###
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
         name: out-macos-${{matrix.architecture.name}}
         if-no-files-found: error

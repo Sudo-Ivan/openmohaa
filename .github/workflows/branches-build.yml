@@ -14,14 +14,15 @@ concurrency:
 permissions:
   contents: write
 
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
 jobs:
   build-all:
    uses: ./.github/workflows/shared-build.yml
    with:
       environment: 'testing'
 
-  # Initially create a release with 1 job
-  # so multiple files can be uploaded at the same time afterwards
   create-release:
     if: github.event_name != 'pull_request' && github.ref_name == 'main'
     runs-on: ubuntu-24.04
@@ -29,8 +30,13 @@ jobs:
     needs: [build-all]
 
     steps:
+    - name: Delete existing dev release
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: gh release delete dev --yes --cleanup-tag 2>/dev/null || true
+
     - name: Release
-      uses: softprops/action-gh-release@v2.3.2
+      uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8
       with:
         prerelease: true
         name: '${{github.ref_name}}-${{github.sha}}'
@@ -38,41 +44,25 @@ jobs:
 
   deploy-release:
     if: github.event_name != 'pull_request' && github.ref_name == 'main'
-    strategy:
-      matrix:
-        target_os: [
-          'linux-amd64',
-          'linux-i686',
-          'linux-arm64',
-          'linux-armhf',
-          'linux-powerpc',
-          'linux-ppc64',
-          'linux-ppc64el',
-          'windows-x64-pdb',
-          'windows-x86-pdb',
-          'windows-arm64-pdb',
-          'macos-multiarch-arm64-x86_64',
-        ]
-
     runs-on: ubuntu-24.04
     environment: 'testing'
     needs: [create-release]
 
-    env:
-      RELEASE_NAME: ${{github.event.repository.name}}-dev-${{matrix.target_os}}
-
     steps:
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
       with:
-        name: 'out-${{matrix.target_os}}'
-        path: ${{github.workspace}}/${{matrix.target_os}}
+        pattern: 'out-*'
+        path: artifacts
 
-    - name: Zip
-      working-directory: '${{github.workspace}}/${{matrix.target_os}}'
-      run: zip -9 -r "../${{env.RELEASE_NAME}}.zip" ./
+    - name: Zip artifacts
+      run: |
+        for dir in artifacts/out-*; do
+          target="${dir#artifacts/out-}"
+          (cd "$dir" && zip -9 -r "$GITHUB_WORKSPACE/${{ github.event.repository.name }}-dev-${target}.zip" .)
+        done
 
     - name: Release
-      uses: softprops/action-gh-release@v2.3.2
+      uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8
       with:
         tag_name: 'dev'
-        files: ${{github.workspace}}/${{env.RELEASE_NAME}}.zip
+        files: ${{github.workspace}}/*.zip
