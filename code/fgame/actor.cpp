@@ -2786,6 +2786,9 @@ Actor::Actor()
     takedamage = DAMAGE_AIM;
     m_fFovDot  = cos(DEG2RAD(m_fFov / 2.0));
 
+    m_iAimSettleStartTime = 0;
+    m_fAimSettleBonus = 0.0f;
+
     m_eAnimMode = ANIM_MODE_NONE;
     Anim_Emotion(EMOTION_NONE);
 
@@ -6637,6 +6640,18 @@ void Actor::UpdateEnemyInternal(void)
         SetEnemy(m_PotentialEnemies.GetCurrentEnemy(), false);
     }
 
+    // update aim settling: accuracy improves while focusing on same target
+    if (m_Enemy) {
+        int settleTime = level.inttime - m_iAimSettleStartTime;
+        // settles over ~3 seconds, max +0.3 accuracy bonus
+        m_fAimSettleBonus = (float)settleTime / 3000.0f * 0.3f;
+        if (m_fAimSettleBonus > 0.3f) {
+            m_fAimSettleBonus = 0.3f;
+        }
+    } else {
+        m_fAimSettleBonus = 0.0f;
+    }
+
     m_fNoticeTimeScale += (level.inttime - m_iEnemyCheckTime) / 10000.f;
 
     if (m_fNoticeTimeScale > m_fMaxNoticeTimeScale) {
@@ -6714,6 +6729,10 @@ void Actor::SetEnemy(Sentient *pEnemy, bool bForceConfirmed)
     m_Enemy     = pEnemy;
 
     m_iEnemyChangeTime = level.inttime;
+
+    // reset aim settling when target changes
+    m_iAimSettleStartTime = level.inttime;
+    m_fAimSettleBonus = 0.0f;
 
     if (m_Enemy) {
         PostEvent(EV_Actor_ShareEnemy, 0.75f);
@@ -9252,6 +9271,11 @@ void Actor::CuriousSound(int iType, vec3_t sound_origin, float fDistSquared, flo
         return;
     }
 
+    // face toward sound origin so the actor looks in the direction of the noise
+    if (!m_Enemy) {
+        mTargetPos = sound_origin;
+    }
+
     RaiseAlertnessForEventType(iType);
     // get the priority
     iPriority = PriorityForEventType(iType);
@@ -10625,7 +10649,7 @@ Vector Actor::GunTarget(bool bNoCollision, const vec3_t position, const vec3_t f
     float           fAccuracy, fCoverFactor;
     Vector          aimDir;
 
-    fCoverFactor = mAccuracy * ((1.0 - m_fVisibilityAlpha) * aiMinAccuracy->value + m_fVisibilityAlpha);
+    fCoverFactor = (mAccuracy + m_fAimSettleBonus) * ((1.0 - m_fVisibilityAlpha) * aiMinAccuracy->value + m_fVisibilityAlpha);
 
     if (doInit) {
         aiRanges[0] = gi.Cvar_Get("g_aishortrange", "500", 0);

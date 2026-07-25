@@ -850,6 +850,47 @@ void Sentient::EventToggleItemUse(Event *ev)
     }
 }
 
+static int RangeScoreForWeaponClass(int weaponClass, float dist)
+{
+    // Optimal engagement ranges per weapon class.
+    // Returns 0..3 bonus: higher = more suitable at this range.
+    if (weaponClass & WEAPON_CLASS_PISTOL) {
+        if (dist < 256.0f)  return 3;
+        if (dist < 512.0f)  return 2;
+        if (dist < 1024.0f) return 1;
+        return 0;
+    }
+    if (weaponClass & WEAPON_CLASS_SMG) {
+        if (dist < 256.0f)  return 3;
+        if (dist < 512.0f)  return 3;
+        if (dist < 1024.0f) return 2;
+        if (dist < 2048.0f) return 1;
+        return 0;
+    }
+    if (weaponClass & WEAPON_CLASS_RIFLE) {
+        if (dist < 512.0f)  return 1;
+        if (dist < 1024.0f) return 2;
+        if (dist < 2048.0f) return 3;
+        if (dist < 4096.0f) return 3;
+        return 2;
+    }
+    if (weaponClass & WEAPON_CLASS_MG) {
+        if (dist < 512.0f)  return 0;
+        if (dist < 1024.0f) return 1;
+        if (dist < 2048.0f) return 2;
+        if (dist < 4096.0f) return 3;
+        return 3;
+    }
+    if (weaponClass & (WEAPON_CLASS_HEAVY | WEAPON_CLASS_CANNON)) {
+        if (dist < 512.0f)  return 0;
+        if (dist < 1024.0f) return 1;
+        if (dist < 2048.0f) return 2;
+        if (dist < 4096.0f) return 3;
+        return 2;
+    }
+    return 1;
+}
+
 Weapon *Sentient::BestWeapon(Weapon *ignore, qboolean bGetItem, int iIgnoreClass)
 {
     Weapon *next;
@@ -857,14 +898,29 @@ Weapon *Sentient::BestWeapon(Weapon *ignore, qboolean bGetItem, int iIgnoreClass
     int     j;
     int     bestrank;
     Weapon *bestweapon;
+    float   distToEnemy;
+    qboolean hasEnemy;
 
     n = inventory.NumObjects();
+
+    // calculate distance to current enemy for range-aware selection
+    if (m_Enemy && m_Enemy->IsSubclassOfEntity()) {
+        Entity *e = static_cast<Entity *>(m_Enemy.Pointer());
+        Vector vDelta = e->localorigin - localorigin;
+        distToEnemy = vDelta.length();
+        hasEnemy = qtrue;
+    } else {
+        distToEnemy = 0.0f;
+        hasEnemy = qfalse;
+    }
 
     // Search forewards until we find a weapon
     bestweapon = NULL;
     bestrank   = -999999;
 
     for (j = 1; j <= n; j++) {
+        int effectiveRank;
+
         next = (Weapon *)G_GetEntity(inventory.ObjectAt(j));
 
         assert(next);
@@ -884,16 +940,21 @@ Weapon *Sentient::BestWeapon(Weapon *ignore, qboolean bGetItem, int iIgnoreClass
             continue;
         }
 
-        if (next->GetRank() < bestrank) {
-            continue;
-        }
-
         if (!next->HasAmmo(FIRE_PRIMARY) && !next->GetUseNoAmmo()) {
             continue;
         }
 
+        effectiveRank = next->GetRank();
+        if (hasEnemy) {
+            effectiveRank += RangeScoreForWeaponClass(next->GetWeaponClass(), distToEnemy);
+        }
+
+        if (effectiveRank < bestrank) {
+            continue;
+        }
+
         bestweapon = (Weapon *)next;
-        bestrank   = bestweapon->GetRank();
+        bestrank   = effectiveRank;
     }
 
     return bestweapon;

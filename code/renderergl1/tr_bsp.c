@@ -256,7 +256,7 @@ static	void R_LoadLightmaps(gamelump_t* l) {
             }
         }
         tr.lightmaps[i] = R_CreateImageOld(va("*lightmap%d", i), image,
-            LIGHTMAP_SIZE, LIGHTMAP_SIZE, 0, 1, qfalse, qfalse, qfalse, qfalse, GL_CLAMP, GL_CLAMP);
+            LIGHTMAP_SIZE, LIGHTMAP_SIZE, 0, 1, qfalse, qfalse, qfalse, qfalse, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
     }
 
     if ( r_lightmap->integer == 2 )	{

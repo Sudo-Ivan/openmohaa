@@ -1598,6 +1598,9 @@ void SV_ShutdownGameProgs( void ) {
 	Z_FreeTags(TAG_GAME);
 
 	ge = NULL;
+
+	// Clear BSP cache since the map is being unloaded
+	CM_ClearBSPCache();
 }
 
 /*

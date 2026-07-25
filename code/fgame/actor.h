@@ -686,6 +686,9 @@ public:
     int m_iEnemyFovChangeTime;
     /* last known enemy position. */
     Vector m_vLastEnemyPos;
+    /* aim settling: accuracy bonus increases while focusing on same target */
+    int m_iAimSettleStartTime;
+    float m_fAimSettleBonus;
     /* last time enemy position was changed. */
     int m_iLastEnemyPosChangeTime;
     /*  check EV_Actor_GetEnemyShareRange and EV_Actor_SetEnemyShareRange */

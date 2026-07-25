@@ -842,7 +842,13 @@ void CM_SetBSPCache(const char *name, const byte *data, int length, int checksum
 
 qboolean CM_GetBSPCache(const char *name, const byte **data, int *length, int *checksum)
 {
-    if (s_bspCacheData && !Q_stricmp(s_bspCacheName, name)) {
+    // compare base map name only (strip path and extension)
+    const char *a = COM_SkipPath(s_bspCacheName);
+    const char *b = COM_SkipPath(name);
+    char a_base[MAX_QPATH], b_base[MAX_QPATH];
+    COM_StripExtension(a, a_base, sizeof(a_base));
+    COM_StripExtension(b, b_base, sizeof(b_base));
+    if (s_bspCacheData && !Q_stricmp(a_base, b_base)) {
         *data = s_bspCacheData;
         *length = s_bspCacheLength;
         *checksum = s_bspCacheChecksum;
