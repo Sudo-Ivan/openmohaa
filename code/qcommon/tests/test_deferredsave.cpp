@@ -148,7 +148,7 @@ static void test_csvg_empty()
 {
     std::printf("test_csvg_empty...\n");
 
-    unsigned char in[] = {};
+    unsigned char in[1] = {0};
     unsigned char compressed[64];
     unsigned char decompressed[16];
     size_t        compressed_len;

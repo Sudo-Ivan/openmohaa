@@ -16,22 +16,19 @@ Powered by [ioquake3](https://github.com/ioquake/ioq3) and the [F.A.K.K SDK](htt
 
 ## Our changes
 
-- feat: add `g_voteCooldown`, `g_roundResetTime`, `sv_connectionLog`, `g_teamDamageLog`, `g_minPlayers`, `g_teamlock`, `g_autoRecordStats`, `sv_autoRestart`, `g_maxScore`
-- feat: add MOTD cvar (`g_motd`), round end logging, `mapname.cfg` auto-exec, `g_disabledWeapons`, `g_voteTimeout`
-- fix(client): round `com_maxfps` division for accurate FPS capping (#530) `f1177a69`
-- fix(fgame): use `icmp` not `icmpn` in `WaitForState` for exact state match (#702) `f1177a69`
-- fix(renderer): default `multitextureEnv` to `GL_MODULATE` to fix invalid env crash (#864)
+- feat: add `g_voteCooldown`, `g_roundResetTime`, `sv_connectionLog`, `g_teamDamageLog`, `g_minPlayers`, `g_teamlock`, `g_autoRecordStats`, `sv_autoRestart`, `g_maxScore` SHA: `0887eeb7`
+- feat: add MOTD cvar (`g_motd`), round end logging, `mapname.cfg` auto-exec, `g_disabledWeapons`, `g_voteTimeout` SHA: `0cbb89fa`
+- fix(client): round `com_maxfps` division for accurate FPS capping (#530) SHA: `f1177a69`
+- fix(fgame): use `icmp` not `icmpn` in `WaitForState` for exact state match (#702) SHA: `f1177a69`
+- fix(renderer): default `multitextureEnv` to `GL_MODULATE` to fix invalid env crash (#864) SHA: `9b11fa63`
 - fix(fgame): change `registercmd` to `EV_RETURN` so it works in script expressions (#672)
-- fix(fgame): add `EV_GETTER` for Item amount/dmamount/name (#920) `28ff8f0c`
-- fix(server): read bans from homestatepath for rehashbans (#926) `28ff8f0c`
-- fix(fgame): use `uint32_t` for `md5_word_t` to fix non-deterministic MD5 hashes (#928) `ba3dfdf8`
-- fix(net): harden OOB connect path and add netsec tests `68a1c349`
-- test: add oracle, smoke, acceptance, and adversarial tests `51477368`
-- test: add adversarial tests that found 4 engine bugs `7b822f67`
-- fix(fgame): defer LZ77 compression and disk writes across frames to prevent save game freeze
-- Added `workflow_dispatch` manual trigger to all GitHub Actions workflows
-- Fixed Node 20 deprecation and pinned all actions to full commit SHAs
-- Restructured release workflows
+- fix(fgame): add `EV_GETTER` for Item amount/dmamount/name (#920) SHA: `28ff8f0c`
+- fix(server): read bans from homestatepath for rehashbans (#926) SHA: `28ff8f0c`
+- fix(fgame): use `uint32_t` for `md5_word_t` to fix non-deterministic MD5 hashes (#928) SHA: `ba3dfdf8`
+- fix(net): harden OOB connect path and add netsec tests SHA: `68a1c349`
+- test: add oracle, smoke, acceptance, and adversarial tests SHA: `51477368`
+- test: add adversarial tests that found 4 engine bugs SHA: `7b822f67`
+- fix(fgame): defer LZ77 compression and disk writes across frames to prevent save game freeze SHA: `75d8e5f2`
 
 *OpenMoHAA is an independent project and is not affiliated with or endorsed by Electronic Arts.*
 
