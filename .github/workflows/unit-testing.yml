@@ -50,7 +50,8 @@ jobs:
     - name: Build
       working-directory: ${{github.workspace}}
       run: |
-        cmake --build ${{github.workspace}}/build --config Debug --parallel
+        cmake --build ${{github.workspace}}/build --config Debug --parallel 2>&1 | (grep -vE "^\[" || true)
+        exit ${PIPESTATUS[0]}
 
     - name: Test
       working-directory: ${{github.workspace}}
