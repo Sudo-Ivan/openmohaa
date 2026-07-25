@@ -544,6 +544,14 @@ This function may execute for a couple of minutes with a slow disk.
 void CG_PrepRefresh(void)
 {
     int i;
+    int startTime = 0;
+    int endTime;
+    cvar_t *loadtiming;
+
+    loadtiming = cgi.Cvar_Get("com_loadtiming", "0", 0);
+    if (loadtiming->integer) {
+        startTime = cgi.Milliseconds();
+    }
 
     memset(&cg.refdef, 0, sizeof(cg.refdef));
 
@@ -587,6 +595,11 @@ void CG_PrepRefresh(void)
     // go through all the configstrings and process them
     for (i = CS_SYSTEMINFO + 1; i < MAX_CONFIGSTRINGS; i++) {
         CG_ProcessConfigString(i, qfalse);
+    }
+
+    if (loadtiming->integer) {
+        endTime = cgi.Milliseconds();
+        cgi.Printf("com_loadtiming: CG_PrepRefresh map=%s elapsed_ms=%d\n", cgs.mapname, endTime - startTime);
     }
 }
 

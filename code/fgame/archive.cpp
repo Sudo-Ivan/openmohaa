@@ -60,6 +60,57 @@ enum {
     ARC_NUMTYPES
 };
 
+byte    *g_deferredSaveBuffer                              = NULL;
+size_t   g_deferredSaveLength                              = 0;
+char     g_deferredSaveFilename[MAX_DEFERRED_SAVE_FILENAME] = "";
+qboolean g_deferredSavePending                             = qfalse;
+
+static byte *g_pendingLoadBuffer = NULL;
+static size_t g_pendingLoadLength = 0;
+static char  g_pendingLoadFilename[MAX_DEFERRED_SAVE_FILENAME] = "";
+
+static void PendingLoad_Clear(void)
+{
+    if (g_pendingLoadBuffer) {
+        gi.Free(g_pendingLoadBuffer);
+        g_pendingLoadBuffer = NULL;
+    }
+    g_pendingLoadLength      = 0;
+    g_pendingLoadFilename[0] = '\0';
+}
+
+static void PendingLoad_Stash(const char *name, byte *buf, size_t len)
+{
+    PendingLoad_Clear();
+    if (!name || !buf || !len) {
+        if (buf) {
+            gi.Free(buf);
+        }
+        return;
+    }
+
+    Q_strncpyz(g_pendingLoadFilename, name, sizeof(g_pendingLoadFilename));
+    g_pendingLoadBuffer = buf;
+    g_pendingLoadLength = len;
+}
+
+static qboolean PendingLoad_Take(const char *name, byte **buf, size_t *len)
+{
+    if (!name || !g_pendingLoadBuffer || !g_pendingLoadFilename[0]) {
+        return qfalse;
+    }
+    if (Q_stricmp(name, g_pendingLoadFilename)) {
+        return qfalse;
+    }
+
+    *buf = g_pendingLoadBuffer;
+    *len = g_pendingLoadLength;
+    g_pendingLoadBuffer      = NULL;
+    g_pendingLoadLength      = 0;
+    g_pendingLoadFilename[0] = '\0';
+    return qtrue;
+}
+
 static const char *typenames[] = {
     "NULL",   "vector",        "vec2",           "vec3",         "vec4",       "int",      "unsigned", "byte",
     "char",   "short",         "unsigned short", "float",        "double",     "qboolean", "string",   "raw data",
@@ -181,6 +232,16 @@ qboolean ArchiveFile::OpenRead(const char *name)
         return false;
     }
 
+    if (PendingLoad_Take(name, &tempbuf, &length)) {
+        buffer       = tempbuf;
+        bufferlength = length;
+        filename     = name;
+        pos          = buffer;
+        writing      = false;
+        opened       = true;
+        return true;
+    }
+
     length = gi.FS_ReadFile(name, (void **)&tempbuf, qtrue);
     if (length == (size_t)(-1) || length == 0) {
         return false;
@@ -288,6 +349,17 @@ qboolean ArchiveFile::Write(const void *source, size_t size)
     return true;
 }
 
+byte *ArchiveFile::DetachBuffer()
+{
+    byte *ret = buffer;
+    buffer       = NULL;
+    writing      = false;
+    length       = 0;
+    bufferlength = 0;
+    pos          = NULL;
+    return ret;
+}
+
 Archiver::Archiver()
 {
     archivemode = ARCHIVE_WRITE;
@@ -388,6 +460,125 @@ void Archiver::Close(void)
     }
 
     archivemode = ARCHIVE_NONE;
+}
+
+void Archiver::CloseDeferred(void)
+{
+    if (archivemode == ARCHIVE_NONE) {
+        return;
+    }
+
+    if (archivemode == ARCHIVE_WRITE) {
+        int    numobjects;
+        size_t pos;
+        byte  *buf;
+        size_t len;
+
+        if (g_deferredSavePending) {
+            DeferredSave_Cancel();
+        }
+
+        pos = archivefile.Tell();
+        archivefile.Seek(numclassespos);
+        numobjects = classpointerList.NumObjects();
+        ArchiveInteger(&numobjects);
+        archivefile.Seek(pos);
+
+        len = archivefile.Length();
+        buf = archivefile.DetachBuffer();
+
+        Q_strncpyz(g_deferredSaveFilename, archivefile.Filename(), sizeof(g_deferredSaveFilename));
+        g_deferredSaveBuffer  = buf;
+        g_deferredSaveLength  = len;
+        g_deferredSavePending = qtrue;
+    }
+
+    archivefile.Close();
+    archivemode = ARCHIVE_NONE;
+}
+
+qboolean Archiver::SeekToStart(void)
+{
+    return archivefile.Seek(0);
+}
+
+size_t Archiver::FileLength(void)
+{
+    return archivefile.Length();
+}
+
+byte *Archiver::DetachFileBuffer(void)
+{
+    return archivefile.DetachBuffer();
+}
+
+static void DeferredSave_CompressBuffer(byte **buf, size_t *len)
+{
+    size_t out_len;
+    size_t tempbuf_len;
+    byte  *tempbuf;
+
+    tempbuf_len = (*len >> 6) + *len + 27;
+    tempbuf     = (byte *)gi.Malloc(tempbuf_len);
+
+    tempbuf[0] = 'C';
+    tempbuf[1] = 'S';
+    tempbuf[2] = 'V';
+    tempbuf[3] = 'G';
+
+    unsigned int temp_le = *len;
+    CopyLittleLong(tempbuf + 4, &temp_le);
+
+    if (g_lz77.Compress(*buf, *len, tempbuf + 8, &out_len)) {
+        gi.Free(tempbuf);
+        gi.Error(ERR_DROP, "DeferredSave: Compression failed!\n");
+        return;
+    }
+
+    gi.Free(*buf);
+    *buf = tempbuf;
+    *len = out_len + 8;
+}
+
+qboolean DeferredSave_Flush(int phase)
+{
+    if (!g_deferredSavePending || !g_deferredSaveBuffer) {
+        return qtrue;
+    }
+
+    if (phase == 0) {
+        DeferredSave_CompressBuffer(&g_deferredSaveBuffer, &g_deferredSaveLength);
+        return qfalse;
+    }
+
+    if (phase == 1) {
+        gi.FS_WriteFile(g_deferredSaveFilename, g_deferredSaveBuffer, g_deferredSaveLength);
+        DeferredSave_Cancel();
+        return qtrue;
+    }
+
+    return qtrue;
+}
+
+void DeferredSave_Cancel(void)
+{
+    if (g_deferredSaveBuffer) {
+        gi.Free(g_deferredSaveBuffer);
+        g_deferredSaveBuffer = NULL;
+    }
+    g_deferredSaveLength      = 0;
+    g_deferredSaveFilename[0] = '\0';
+    g_deferredSavePending     = qfalse;
+}
+
+void Archive_StashValidatedLoad(const char *name, byte *buf, size_t len)
+{
+    PendingLoad_Stash(name, buf, len);
+}
+
+void Archive_ClearPendingLoad(void)
+{
+    PendingLoad_Clear();
 }
 
 /****************************************************************************************

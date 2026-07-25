@@ -142,6 +142,20 @@ As you see the default variable above, you can add multiple keys (between the qu
 > bind ` "toggleconsole" is not to be used anymore.
 </details>
 
+---
+
+<details>
+<summary>How can I speed up map loading and mission transitions?</summary>
+
+### Prefer small lightmap BSPs when available
+If `maps/<map>_sml.bsp` exists and `r_largemap` is `0` (default), OpenMoHAA loads the smaller BSP for both collision and rendering. Keep `r_largemap 0` unless you need the large lightmap quality.
+
+### Fence mask cache (`.fcm`)
+Collision fence masks can be generated at runtime from textures. Prebuilt `.fcm` files under the map data avoid that first-load spike. Developers can force cache writes with `cm_FCMcacheall 1` while loading maps.
+
+### Timing
+Set `com_loadtiming 1` to print a one-line `SV_SpawnServer` timing summary after each map load.
+</details>
 
 ---
 

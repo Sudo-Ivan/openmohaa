@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // actor_turret.cpp
 
 #include "actor.h"
+#include "skill_combat_profile.h"
 
 void Actor::InitTurret(GlobalFuncs_t *func)
 {
@@ -232,6 +233,11 @@ void Actor::Turret_BeginRetarget(void)
 {
     SetEnemyPos(m_Enemy->origin);
     AimAtEnemyBehavior();
+
+    if (SkillCombatProfile_Active() && random() < SkillCombatProfile_Get()->stepSideBias) {
+        TransitionState(ACTOR_STATE_TURRET_RETARGET_STEP_SIDE_SMALL, 0);
+        return;
+    }
 
     // Replaced in 2.0
     //  Use the Retarget_Suppress state instead of the Retarget_Sniper_Node state

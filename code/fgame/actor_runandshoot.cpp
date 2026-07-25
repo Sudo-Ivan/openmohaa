@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //
 
 #include "actor.h"
+#include "skill_combat_profile.h"
 
 void Actor::InitRunAndShoot(GlobalFuncs_t *func)
 {
@@ -96,7 +97,12 @@ void Actor::State_RunAndShoot_Running(void)
 
     if (!m_patrolCurrentNode) {
         if (m_Enemy) {
-            SetThink(THINKSTATE_ATTACK, THINK_TURRET);
+            if (SkillCombatProfile_Active() && random() < SkillCombatProfile_Get()->runAndShootStayChance
+                && (origin - m_Enemy->origin).lengthXY() > atof(gi.Cvar_Get("g_aishortrange", "500", 0)->string)) {
+                SetThink(THINKSTATE_ATTACK, THINK_COVER);
+            } else {
+                SetThink(THINKSTATE_ATTACK, THINK_TURRET);
+            }
         } else {
             SetThinkIdle(THINK_IDLE);
         }
@@ -109,7 +115,12 @@ void Actor::State_RunAndShoot_Running(void)
         ClearPatrolCurrentNode();
 
         if (m_Enemy) {
-            SetThink(THINKSTATE_ATTACK, THINK_TURRET);
+            if (SkillCombatProfile_Active() && random() < SkillCombatProfile_Get()->runAndShootStayChance
+                && (origin - m_Enemy->origin).lengthXY() > atof(gi.Cvar_Get("g_aishortrange", "500", 0)->string)) {
+                SetThink(THINKSTATE_ATTACK, THINK_COVER);
+            } else {
+                SetThink(THINKSTATE_ATTACK, THINK_TURRET);
+            }
         } else {
             SetThinkIdle(THINK_IDLE);
         }

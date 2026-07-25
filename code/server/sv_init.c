@@ -968,7 +968,11 @@ void SV_SpawnServer( const char *server, qboolean loadgame, qboolean restart, qb
 	Q_strncpyz(svs.gameName, "current", sizeof(svs.gameName) );
 
 	iEnd = Sys_Milliseconds();
-	Com_Printf( "------ Server Initialization Complete ------ %5.2f seconds\n", ( float )iEnd / 1000.0f );
+	Com_Printf( "------ Server Initialization Complete ------ %5.2f seconds\n", ( float )( iEnd - iStart ) / 1000.0f );
+	if ( com_loadtiming && com_loadtiming->integer ) {
+		Com_Printf( "com_loadtiming: SV_SpawnServer map=%s loadgame=%d transition=%d elapsed_ms=%d\n",
+			mapname, loadgame, bTransition, iEnd - iStart );
+	}
 
 	UI_LoadResource( "*143" );
 

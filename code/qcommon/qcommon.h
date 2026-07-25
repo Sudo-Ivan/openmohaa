@@ -1028,6 +1028,7 @@ extern	cvar_t	*fps_location;
 extern	cvar_t	*developer;
 extern	cvar_t	*com_dedicated;
 extern	cvar_t	*com_speeds;
+extern	cvar_t	*com_loadtiming;
 extern	cvar_t	*com_timescale;
 extern	cvar_t	*com_sv_running;
 extern	cvar_t	*com_cl_running;

@@ -23,14 +23,24 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // actor_cover.cpp
 
 #include "actor.h"
+#include "skill_combat_profile.h"
 
 static int Cover_HideTime(int iTeam)
 {
-    if (iTeam == TEAM_AMERICAN) {
-        return rand() % 2001 + 2000;
-    } else {
-        return rand() % 11001 + 4000;
+    float holdMult = 1.0f;
+    int   base;
+
+    if (SkillCombatProfile_Active()) {
+        holdMult = SkillCombatProfile_Get()->coverHoldMult;
     }
+
+    if (iTeam == TEAM_AMERICAN) {
+        base = rand() % 2001 + 2000;
+    } else {
+        base = rand() % 11001 + 4000;
+    }
+
+    return (int)((float)base * holdMult);
 }
 
 bool Actor::Cover_IsValid(PathNode *node)

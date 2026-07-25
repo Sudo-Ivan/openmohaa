@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "level.h"
 #include "parm.h"
 #include "navigate.h"
+#include "skill_combat_profile.h"
 #include "gravpath.h"
 #include "entity.h"
 #include "dm_manager.h"
@@ -1599,6 +1600,8 @@ void Level::SetMap(const char *themapname)
     // Added in 2.30
     //  Store the map filename in a variable
     gi.cvar_set("mapfilename", m_mapfile.c_str());
+
+    SkillCombatProfile_SetMap(level_name.c_str());
 }
 
 void Level::LoadAllScripts(const char *name, const char *extension)

@@ -26,6 +26,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "worldspawn.h"
 #include "sentient.h"
 #include "actor.h"
+#include "skill_combat_profile.h"
+#include "gamecvars.h"
 
 float ActorEnemy::UpdateLMRF(Actor *pSelf, bool *pbInFovAndRange, bool *pbVisible)
 {
@@ -92,6 +94,9 @@ float ActorEnemy::UpdateLMRF(Actor *pSelf, bool *pbInFovAndRange, bool *pbVisibl
 
     fLMRF = Square(m_pEnemy->stealthMovementScale * fNormalizedRange) * (fForward + 128.0) / fMinSightTime;
     fLMRF *= pSelf->m_fNoticeTimeScale * g_ai_noticescale->value;
+    if (SkillCombatProfile_Active()) {
+        fLMRF /= SkillCombatProfile_Get()->noticeMult;
+    }
     if (fLMRF < fFovScale) {
         return fFovScale;
     }

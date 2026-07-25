@@ -79,6 +79,7 @@ cvar_t	*config;
 cvar_t	*fps;
 cvar_t	*fps_location;
 cvar_t	*com_speeds;
+cvar_t	*com_loadtiming;
 cvar_t	*developer;
 cvar_t	*com_dedicated;
 cvar_t	*com_timescale;
@@ -1918,6 +1919,7 @@ void Com_Init( char *commandLine ) {
 	com_logfile = Cvar_Get("logfile", "0", CVAR_TEMP);
 	com_logfile_timestamps = Cvar_Get("logfile_timestamps", "1", CVAR_TEMP);
 	com_speeds = Cvar_Get( "com_speeds", "0", 0 );
+	com_loadtiming = Cvar_Get( "com_loadtiming", "0", 0 );
 	com_timedemo = Cvar_Get( "timedemo", "0", CVAR_CHEAT );
 	com_dedicated = Cvar_Get( "dedicated", "0", CVAR_LATCH );
 	cl_packetdelay = Cvar_Get( "cl_packetdelay", "0", 0 );

@@ -80,6 +80,7 @@ public:
     qboolean    OpenWrite(const char *name);
     qboolean    Read(void *dest, size_t size);
     qboolean    Write(const void *source, size_t size);
+    byte       *DetachBuffer();
 };
 
 class Archiver
@@ -114,6 +115,11 @@ public:
     ~Archiver();
     void FileError(const char *fmt, ...);
     void Close(void);
+    void CloseDeferred(void);
+
+    qboolean SeekToStart(void);
+    size_t   FileLength(void);
+    byte    *DetachFileBuffer(void);
 
     qboolean Read(str& name, qboolean harderror = qtrue);
     qboolean Read(const char *name, qboolean harderror = qtrue);
@@ -348,3 +354,16 @@ void con_map<key, value>::Archive(Archiver& arc)
         arc.ArchiveInteger(&tempInt); \
         (thing) = (type)tempInt;      \
     }
+
+#define MAX_DEFERRED_SAVE_FILENAME 256
+
+extern byte    *g_deferredSaveBuffer;
+extern size_t   g_deferredSaveLength;
+extern char     g_deferredSaveFilename[MAX_DEFERRED_SAVE_FILENAME];
+extern qboolean g_deferredSavePending;
+
+qboolean DeferredSave_Flush(int phase);
+void     DeferredSave_Cancel(void);
+
+void Archive_StashValidatedLoad(const char *name, byte *buf, size_t len);
+void Archive_ClearPendingLoad(void);

@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "object.h"
 #include "scriptslave.h"
 #include "explosion.h"
+#include "skill_combat_profile.h"
 #include "misc.h"
 #include "playerstart.h"
 #include "characterstate.h"
@@ -6716,7 +6717,7 @@ void Actor::SetEnemy(Sentient *pEnemy, bool bForceConfirmed)
     m_iEnemyChangeTime = level.inttime;
 
     if (m_Enemy) {
-        PostEvent(EV_Actor_ShareEnemy, 0.75f);
+        PostEvent(EV_Actor_ShareEnemy, SkillCombatProfile_Active() ? SkillCombatProfile_Get()->shareEnemyDelay : 0.75f);
 
         m_bEnemyIsDisguised = m_Enemy->m_bHasDisguise && (m_Enemy->m_bIsDisguised || !CanSeeEnemy(0));
 
@@ -8588,7 +8589,8 @@ bool Actor::PassesTransitionConditions_Grenade(void)
         return false;
     }
 
-    return m_fGrenadeAwareness >= random();
+    return m_fGrenadeAwareness * (SkillCombatProfile_Active() ? SkillCombatProfile_Get()->grenadeAwarenessMult : 1.0f)
+           >= random();
 }
 
 /*
@@ -9248,7 +9250,9 @@ void Actor::CuriousSound(int iType, vec3_t sound_origin, float fDistSquared, flo
         }
     }
 
-    if ((fRangeFactor * m_fSoundAwareness) < random() * 100.0) {
+    if ((fRangeFactor * m_fSoundAwareness
+         * (SkillCombatProfile_Active() ? SkillCombatProfile_Get()->soundAwarenessMult : 1.0f))
+        < random() * 100.0) {
         return;
     }
 
@@ -10624,8 +10628,17 @@ Vector Actor::GunTarget(bool bNoCollision, const vec3_t position, const vec3_t f
     static qboolean doInit = true;
     float           fAccuracy, fCoverFactor;
     Vector          aimDir;
+    float           accuracyScale = 1.0f;
+    float           scatterScale  = 1.0f;
 
-    fCoverFactor = mAccuracy * ((1.0 - m_fVisibilityAlpha) * aiMinAccuracy->value + m_fVisibilityAlpha);
+    if (SkillCombatProfile_Active()) {
+        const skillCombatProfile_t *profile = SkillCombatProfile_Get();
+        accuracyScale = profile->accuracyMult;
+        scatterScale  = profile->aimScatterMult;
+    }
+
+    fCoverFactor =
+        mAccuracy * accuracyScale * ((1.0 - m_fVisibilityAlpha) * aiMinAccuracy->value + m_fVisibilityAlpha);
 
     if (doInit) {
         aiRanges[0] = gi.Cvar_Get("g_aishortrange", "500", 0);
@@ -10715,11 +10728,14 @@ Vector Actor::GunTarget(bool bNoCollision, const vec3_t position, const vec3_t f
 
     if (m_State == ACTOR_STATE_TURRET_RETARGET_SNIPER_NODE) {
         scatterMult = aifSupressScatter->value;
+        if (SkillCombatProfile_Active()) {
+            scatterMult *= SkillCombatProfile_Get()->suppressScatterMult;
+        }
     }
 
     Vector error(0, 0, 0);
 
-    fAccuracy = (1.0 - fCoverFactor) * 2 * scatterMult;
+    fAccuracy = (1.0 - fCoverFactor) * 2 * scatterMult * scatterScale;
     if (fAccuracy < 0) {
         fAccuracy = 0;
     }

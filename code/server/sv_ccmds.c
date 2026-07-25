@@ -2295,6 +2295,10 @@ void S_Load(fileHandle_t f)
 SV_ArchiveServerFile
 ==================
 */
+static qboolean bSavegame;
+static qboolean bFlushSavegame;
+static char     pending_saveshot[256];
+
 qboolean SV_ArchiveServerFile(qboolean loading, qboolean autosave)
 {
 #ifndef DEDICATED
@@ -2368,7 +2372,7 @@ qboolean SV_ArchiveServerFile(qboolean loading, qboolean autosave)
 
 		name = Com_GetArchiveFileName(svs.gameName, "tga");
 		Com_sprintf(cmdString, sizeof(cmdString), "saveshot %s 256 256\n", name);
-		Cbuf_ExecuteText(svs.autosave ? EXEC_INSERT : EXEC_NOW, cmdString);
+		Q_strncpyz(pending_saveshot, cmdString, sizeof(pending_saveshot));
 	} else {
 		FS_FOpenFileRead(name, &f, qfalse, qtrue);
 		if (!f) {
@@ -2412,6 +2416,11 @@ void SV_Loadgame_f(void)
 	const char *name;
 	const char *archive_name;
 	qboolean    bStartedGame;
+
+	if (ge && ge->IsSavePending && ge->IsSavePending()) {
+		Com_Printf("Can't loadgame while a save is in progress\n");
+		return;
+	}
 
 	if (com_cl_running && com_cl_running->integer && clc.state != CA_DISCONNECTED && cg_gametype->integer
 		|| com_sv_running && com_sv_running->integer && g_gametype->integer != GT_SINGLE_PLAYER) {
@@ -2535,6 +2544,9 @@ qboolean SV_AllowSaveGame(void)
 	} else if (sv.state == SS_LOADING || sv.state == SS_LOADING2) {
 		Com_DPrintf("Can't save game when loading\n");
 		return qfalse;
+	} else if (ge && ge->IsSavePending && ge->IsSavePending()) {
+		Com_DPrintf("Can't save game while a save is in progress\n");
+		return qfalse;
 	}
 
 	return qtrue;
@@ -2548,8 +2560,6 @@ qboolean SV_AllowSaveGame(void)
 SV_DoSaveGame
 ==================
 */
-static qboolean bSavegame;
-
 qboolean SV_DoSaveGame()
 {
 #ifndef DEDICATED
@@ -2617,6 +2627,7 @@ void SV_SaveGame(const char *gamename, qboolean autosave)
 	Com_Printf("Done.\n");
 
 	Q_strncpyz(svs.gameName, "current", sizeof(svs.gameName));
+	bFlushSavegame = qtrue;
 #endif
 }
 
@@ -2659,6 +2670,20 @@ SV_CheckSaveGame
 void SV_CheckSaveGame(void)
 {
 #ifndef DEDICATED
+	if (bFlushSavegame) {
+		if (ge && ge->IsSavePending && ge->IsSavePending()) {
+			return;
+		}
+
+		bFlushSavegame = qfalse;
+		if (pending_saveshot[0]) {
+			Cbuf_ExecuteText(EXEC_NOW, pending_saveshot);
+			pending_saveshot[0] = '\0';
+		}
+		UI_SetupFiles();
+		return;
+	}
+
 	if (!SV_DoSaveGame()) {
 		return;
 	}
@@ -2666,7 +2691,6 @@ void SV_CheckSaveGame(void)
 	if (cl.serverTime >= svs.time) {
 		bSavegame = qfalse;
 		SV_SaveGame(savegame_name[0] ? savegame_name : NULL, qfalse);
-		UI_SetupFiles();
 	}
 #endif
 }

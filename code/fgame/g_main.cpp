@@ -39,7 +39,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "playerbot.h"
 #include "g_bot.h"
 #include "navigation_recast_load.h"
+#include "skill_combat_profile.h"
 
+#include "archive.h"
 #include "../corepp/tiki.h"
 
 #ifdef WIN32
@@ -268,6 +270,8 @@ void G_InitGame(int levelTime, int randomSeed)
 
     CVAR_Init();
 
+    SkillCombatProfile_Init();
+
     game.Vars()->ClearList();
 
     // set some level globals
@@ -465,6 +469,26 @@ void G_AddGEntity(gentity_t *edict, qboolean showentnums)
     }
 }
 
+static void ProcessDeferredSave(void)
+{
+    static int deferredPhase = 0;
+
+    if (!g_deferredSavePending) {
+        deferredPhase = 0;
+        return;
+    }
+
+    if (deferredPhase == 0) {
+        DeferredSave_Flush(0);
+        deferredPhase = 1;
+    } else if (deferredPhase == 1) {
+        if (DeferredSave_Flush(1)) {
+            deferredPhase = 0;
+            gi.Printf(HUD_MESSAGE_YELLOW "%s\n", gi.LV_ConvertString("Game Saved"));
+        }
+    }
+}
+
 /*
 ================
 G_RunFrame
@@ -483,6 +507,8 @@ void G_RunFrame(int levelTime, int frameTime)
     static int         processedFrameID         = 0;
 
     try {
+        ProcessDeferredSave();
+
         g_iInThinks = 0;
 
         if (g_showmem->integer) {
@@ -984,21 +1010,39 @@ qboolean G_LevelArchiveValid(const char *filename)
 {
     try {
         qboolean ret;
+        byte    *buf;
+        size_t   len;
 
         Archiver arc;
 
         if (!arc.Read(filename)) {
+            Archive_ClearPendingLoad();
             return qfalse;
         }
 
         ret = LevelArchiveValid(arc);
 
+        if (ret) {
+            if (arc.SeekToStart()) {
+                len = arc.FileLength();
+                buf = arc.DetachFileBuffer();
+                if (buf) {
+                    Archive_StashValidatedLoad(filename, buf, len);
+                }
+            }
+        }
+
         arc.Close();
+
+        if (!ret) {
+            Archive_ClearPendingLoad();
+        }
 
         return ret;
     }
 
     catch (const char *error) {
+        Archive_ClearPendingLoad();
         G_ExitWithError(error);
         return qfalse;
     }
@@ -1388,6 +1432,7 @@ qboolean G_ArchiveLevel(
             arc.Read(filename);
             if (!LevelArchiveValid(arc)) {
                 arc.Close();
+                Archive_ClearPendingLoad();
                 return qfalse;
             }
 
@@ -1576,8 +1621,7 @@ qboolean G_ArchiveLevel(
             LoadingSavegame = false;
             gi.Printf(HUD_MESSAGE_YELLOW "%s\n", gi.LV_ConvertString("Game Loaded"));
         } else {
-            arc.Close();
-            gi.Printf(HUD_MESSAGE_YELLOW "%s\n", gi.LV_ConvertString("Game Saved"));
+            arc.CloseDeferred();
         }
 
         return qtrue;
@@ -1628,6 +1672,11 @@ qboolean G_ReadLevel(const char *filename, byte **savedCgameState, size_t *saved
         LoadingServer   = false;
     }
     return status;
+}
+
+qboolean G_IsSavePending(void)
+{
+    return g_deferredSavePending;
 }
 
 /*
@@ -1705,6 +1754,8 @@ extern "C" game_export_t *GetGameAPI(game_import_t *import)
 
     globals.GetNumSimulatedPlayers   = G_GetNumBots;
     globals.GetSimulatedPlayersSkill = G_GetBotSkill;
+
+    globals.IsSavePending = G_IsSavePending;
 
     return &globals;
 }
