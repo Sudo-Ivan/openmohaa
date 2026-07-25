@@ -14,11 +14,14 @@ Powered by [ioquake3](https://github.com/ioquake/ioq3) and the [F.A.K.K SDK](htt
 
 ## Our changes
 
-- fix(renderer): default multitextureEnv to GL_MODULATE to fix invalid env crash (#864)
-- fix(fgame): change registercmd to EV_RETURN so it works in script expressions (#672)
-- fix(fgame): add EV_GETTER for Item amount/dmamount/name (#920) `28ff8f0c`
+- feat: add MOTD cvar (`g_motd`), round end logging, `mapname.cfg` auto-exec, `g_disabledWeapons`, `g_voteTimeout`
+- fix(client): round `com_maxfps` division for accurate FPS capping (#530) `f1177a69`
+- fix(fgame): use `icmp` not `icmpn` in `WaitForState` for exact state match (#702) `f1177a69`
+- fix(renderer): default `multitextureEnv` to `GL_MODULATE` to fix invalid env crash (#864)
+- fix(fgame): change `registercmd` to `EV_RETURN` so it works in script expressions (#672)
+- fix(fgame): add `EV_GETTER` for Item amount/dmamount/name (#920) `28ff8f0c`
 - fix(server): read bans from homestatepath for rehashbans (#926) `28ff8f0c`
-- fix(fgame): use uint32_t for md5_word_t to fix non-deterministic MD5 hashes (#928) `ba3dfdf8`
+- fix(fgame): use `uint32_t` for `md5_word_t` to fix non-deterministic MD5 hashes (#928) `ba3dfdf8`
 - fix(net): harden OOB connect path and add netsec tests `68a1c349`
 - test: add oracle, smoke, acceptance, and adversarial tests `51477368`
 - test: add adversarial tests that found 4 engine bugs `7b822f67`
