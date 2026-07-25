@@ -58,6 +58,10 @@ In round and objective matches, this is the maximum time at which a player can j
 
 Automatically reopens the door from the opposite side when blocked. Defaults to `1`.
 
+### `g_disabledWeapons`
+
+A comma-separated list of weapon class names or model paths to block from being given to players. When a weapon on this list is given (via spawn, script, or pickup), it is silently denied. Defaults to `""` (all weapons allowed).
+
 ### `g_forceteamspectate`
 
 Forces players to only be able to spectate behind their own team. Defaults to `1`.
@@ -87,6 +91,10 @@ The time in second after which an inactive player gets kicked. Defaults to `900`
 ### `g_inactivespectate`
 
 The time in second after which an inactive player gets moved into spectator. Defaults to `60`
+
+### `g_motd`
+
+The Message of the Day shown to players when they connect. Displayed in the client's console and HUD. Defaults to `""` (no message).
 
 ### `g_password`
 
@@ -124,6 +132,10 @@ Amount of team kills before the player is warned. Defaults to `3`.
 ### `g_teamswitchdelay`
 
 The minimum delay to wait before a player can switch teams again. Defaults to `15`.
+
+### `g_voteTimeout`
+
+The maximum time in seconds that a vote stays open before it expires. Defaults to `30`.
 
 ### `rconpassword`
 
