@@ -148,13 +148,12 @@ static void test_csvg_empty()
 {
     std::printf("test_csvg_empty...\n");
 
-    unsigned char in[] = {};
     unsigned char compressed[64];
     unsigned char decompressed[16];
     size_t        compressed_len;
     size_t        decompressed_len;
 
-    bool ok = csvg_compress(in, 0, compressed, sizeof(compressed), &compressed_len);
+    bool ok = csvg_compress(NULL, 0, compressed, sizeof(compressed), &compressed_len);
     expect_true("csvg_compress empty", ok);
     expect_int_eq("csvg_compress empty len", (int)compressed_len, 8);
 
