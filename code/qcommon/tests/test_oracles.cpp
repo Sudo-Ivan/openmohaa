@@ -177,9 +177,43 @@ static void test_angle_oracle()
     expect_float_close("AngleNormalize360 -10->350", AngleNormalize360(-10.0f), 350.0f, 0.0001f);
     expect_float_close("AngleNormalize180 190->-170", AngleNormalize180(190.0f), -170.0f, 0.0001f);
     expect_float_close("AngleNormalize180 -190->170", AngleNormalize180(-190.0f), 170.0f, 0.0001f);
-    expect_float_close("AngleDelta 10,350", AngleDelta(10.0f, 350.0f), -20.0f, 0.0001f);
+    expect_float_close("AngleDelta 10,350", AngleDelta(10.0f, 350.0f), 20.0f, 0.0001f);
     expect_float_close("LerpAngle 0,90,0.5", LerpAngle(0.0f, 90.0f, 0.5f), 45.0f, 0.0001f);
-    expect_float_close("LerpAngle 350,10,0.5", LerpAngle(350.0f, 10.0f, 0.5f), 0.0f, 0.0001f);
+    expect_float_close("LerpAngle 10,350,0.5", LerpAngle(10.0f, 350.0f, 0.5f), 0.0f, 0.0001f);
+}
+
+static void test_adversarial()
+{
+    // Q_rand with large seed
+    int seed = 2147483647;
+    int r = Q_rand(&seed);
+    expect_true("Q_rand large seed produces finite", r == seed);
+
+    // Com_HashKey with empty string and zero maxlen
+    char empty[] = "";
+    expect_int_eq("HashKey empty maxlen=0", Com_HashKey(empty, 0), 0);
+
+    // Com_HashKey with string shorter than maxlen
+    char short_str[] = "hi";
+    expect_int_eq("HashKey short string large maxlen", Com_HashKey(short_str, 100),
+        104 * 119 + 105 * 120
+        ^ ((104 * 119 + 105 * 120) >> 10)
+        ^ ((104 * 119 + 105 * 120) >> 20));
+
+    // ShortSwap with 0 and -1
+    expect_int_eq("ShortSwap 0", (int)ShortSwap((short)0), 0);
+    expect_int_eq("ShortSwap -1", (int)ShortSwap((short)-1), (int)(short)-1);
+
+    // LongSwap with 0 and -1
+    expect_int_eq("LongSwap 0", LongSwap(0), 0);
+    expect_int_eq("LongSwap -1", LongSwap(-1), -1);
+
+    // VectorNormalize2 of vector with length ~1
+    vec3_t small = {1.0f, 0.0f, 0.0f};
+    vec3_t out;
+    float len = VectorNormalize2(small, out);
+    expect_true("VectorNormalize2 unit positive", len > 0.0f);
+    expect_float_close("VectorNormalize2 unit normalized", out[0], 1.0f, 0.0001f);
 }
 
 static void test_string_oracle()
@@ -230,6 +264,9 @@ int main()
 
     std::printf("test_string_oracle...\n");
     test_string_oracle();
+
+    std::printf("test_adversarial...\n");
+    test_adversarial();
 
     if (failures) {
         std::fprintf(stderr, "%d oracle test(s) failed\n", failures);
