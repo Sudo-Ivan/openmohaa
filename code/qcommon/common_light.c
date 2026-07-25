@@ -43,6 +43,30 @@ int Sys_Milliseconds(void)
     QueryPerformanceCounter(&now);
     return (int)((now.QuadPart - s_perf_base.QuadPart) * 1000 / s_perf_freq.QuadPart);
 }
+#elif defined(__APPLE__)
+#include <mach/mach_time.h>
+
+static uint64_t                  s_mach_base;
+static mach_timebase_info_data_t s_mach_timebase;
+static qboolean                  s_mach_init;
+
+int Sys_Milliseconds(void)
+{
+    uint64_t now;
+    uint64_t elapsed;
+    uint64_t nanos;
+
+    if (!s_mach_init) {
+        mach_timebase_info(&s_mach_timebase);
+        s_mach_base = mach_absolute_time();
+        s_mach_init = qtrue;
+    }
+
+    now     = mach_absolute_time();
+    elapsed = now - s_mach_base;
+    nanos   = elapsed * s_mach_timebase.numer / s_mach_timebase.denom;
+    return (int)(nanos / 1000000ULL);
+}
 #else
 #include <time.h>
 
