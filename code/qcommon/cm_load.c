@@ -1052,13 +1052,14 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	CM_FreeLump( &lump );
 	_R( 47 );
 	// cache raw BSP for renderer to reuse
-	if (!clientload) {
-		byte *cacheBuf;
-		FS_Seek(h, 0, FS_SEEK_SET);
-		cacheBuf = (byte *)Z_Malloc(length);
-		FS_Read(cacheBuf, length, h);
-		CM_SetBSPCache(name, cacheBuf, length, last_checksum);
-	}
+	// OPM: disabled for debugging — suspected of causing texture artifacts
+	// if (!clientload) {
+	//     byte *cacheBuf;
+	//     FS_Seek(h, 0, FS_SEEK_SET);
+	//     cacheBuf = (byte *)Z_Malloc(length);
+	//     FS_Read(cacheBuf, length, h);
+	//     CM_SetBSPCache(name, cacheBuf, length, last_checksum);
+	// }
 	FS_FCloseFile( h );
 	_R( 48 );
 	CM_InitBoxHull();

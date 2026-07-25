@@ -2257,10 +2257,10 @@ void RE_LoadWorldMap( const char *name ) {
     vec3_t			vDefSundir;
     gamelump_t		lump, lump2, lump3;
 
-    // try to reuse BSP data cached by collision loader
-    s_bspCacheData = NULL;
-    s_bspCacheLength = 0;
-    CM_GetBSPCache(name, &s_bspCacheData, &s_bspCacheLength, &cacheChecksum);
+    // OPM: disabled for debugging — suspected of causing texture artifacts
+    // s_bspCacheData = NULL;
+    // s_bspCacheLength = 0;
+    // CM_GetBSPCache(name, &s_bspCacheData, &s_bspCacheLength, &cacheChecksum);
 
     vDefSundir[0] = 0.45f;
     vDefSundir[1] = 0.3f;
