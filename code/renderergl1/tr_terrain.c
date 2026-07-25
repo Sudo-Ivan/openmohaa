@@ -679,8 +679,10 @@ R_PreTessellateTerrain
 static void R_PreTessellateTerrain()
 {
     size_t numTerrainPatches = tr.world->numTerraPatches;
+    int tStart = ri.Milliseconds();
 
     if (!numTerrainPatches) {
+        ri.Printf(PRINT_ALL, "R_PreTessellateTerrain: no terrain patches to tessellate\n");
         return;
     }
 
@@ -692,7 +694,8 @@ static void R_PreTessellateTerrain()
         ri.Cvar_SetValue("ter_maxtris", 65535);
     }
 
-    ri.Printf(PRINT_DEVELOPER, "Using ter_maxtris = %d\n", ter_maxtris->integer);
+    ri.Printf(PRINT_ALL, "R_PreTessellateTerrain: %d patches, ter_maxtris=%d\n",
+        (int)numTerrainPatches, ter_maxtris->integer);
 
     g_nTris  = ter_maxtris->integer * 2 + 1;
     g_nVerts = ter_maxtris->integer + 1;
@@ -907,6 +910,9 @@ static void R_PreTessellateTerrain()
 
         R_ValidateHeightmapForVertex(pTri);
     }
+
+    ri.Printf(PRINT_ALL, "R_PreTessellateTerrain: g_nVerts=%d g_nTris=%d %d ms\n",
+        g_nVerts, g_nTris, ri.Milliseconds() - tStart);
 }
 
 /*
@@ -1624,6 +1630,7 @@ R_InitTerrain
 void R_InitTerrain()
 {
     int i;
+    int tStart = ri.Milliseconds();
 
     ter_maxlod = ri.Cvar_Get("ter_maxlod", "6", CVAR_ARCHIVE | CVAR_TERRAIN_LATCH);
     ri.Cvar_CheckRange(ter_maxlod, 3, 6, qtrue);
@@ -1642,6 +1649,10 @@ void R_InitTerrain()
     ter_count = ri.Cvar_Get("ter_count", "0", 0);
 
     ri.Cmd_AddCommand("ter_restart", R_TerrainRestart_f);
+
+    ri.Printf(PRINT_ALL, "R_InitTerrain: %d patches in world\n",
+        tr.world ? tr.world->numTerraPatches : 0);
+
     R_PreTessellateTerrain();
 
     for (i = 0; i < TERRAIN_TABLE_SIZE; i++) {
@@ -1650,6 +1661,8 @@ void R_InitTerrain()
         g_fClipDotProductTable[i] = sqrt(dot);
         g_fDistanceTable[i]       = 443.5 / sqrt(1.0 - dot);
     }
+
+    ri.Printf(PRINT_ALL, "R_InitTerrain: done, %d ms\n", ri.Milliseconds() - tStart);
 }
 
 /*

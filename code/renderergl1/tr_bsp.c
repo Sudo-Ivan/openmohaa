@@ -206,6 +206,8 @@ static	void R_LoadLightmaps(gamelump_t* l) {
     }
     buf = l->buffer;
 
+    int tStart = ri.Milliseconds();
+
     // we are about to upload textures
     R_IssuePendingRenderCommands();
 
@@ -258,6 +260,9 @@ static	void R_LoadLightmaps(gamelump_t* l) {
         tr.lightmaps[i] = R_CreateImageOld(va("*lightmap%d", i), image,
             LIGHTMAP_SIZE, LIGHTMAP_SIZE, 0, 1, qfalse, qfalse, qfalse, qfalse, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
     }
+
+    ri.Printf(PRINT_ALL, "R_LoadLightmaps: %d lightmaps (%dx%d) wrap=GL_CLAMP_TO_EDGE %d ms\n",
+        tr.numLightmaps, LIGHTMAP_SIZE, LIGHTMAP_SIZE, ri.Milliseconds() - tStart);
 
     if ( r_lightmap->integer == 2 )	{
         ri.Printf( PRINT_ALL, "Brightest lightmap value: %d\n", ( int ) ( maxIntensity * 255 ) );
@@ -546,10 +551,12 @@ void R_LoadTerrain(gamelump_t* lump) {
     int		i;
     cTerraPatch_t* in;
     cTerraPatchUnpacked_t* out;
+    int tStart = ri.Milliseconds();
 
     if (!lump->length) {
         s_worldData.numTerraPatches = 0;
         s_worldData.terraPatches = NULL;
+        ri.Printf(PRINT_ALL, "R_LoadTerrain: no terrain patches\n");
         return;
     }
 
@@ -567,6 +574,9 @@ void R_LoadTerrain(gamelump_t* lump) {
         R_SwapTerraPatch(in);
         R_UnpackTerraPatch(in, out);
     }
+
+    ri.Printf(PRINT_ALL, "R_LoadTerrain: %d patches, %d bytes, %d ms\n",
+        s_worldData.numTerraPatches, lump->length, ri.Milliseconds() - tStart);
 }
 
 /*
@@ -578,10 +588,12 @@ void R_LoadTerrainIndexes(gamelump_t* lump) {
     int		i;
     short* in;
     cTerraPatchUnpacked_t** out;
+    int tStart = ri.Milliseconds();
 
     if (!lump->length) {
         s_worldData.numVisTerraPatches = 0;
         s_worldData.visTerraPatches = NULL;
+        ri.Printf(PRINT_ALL, "R_LoadTerrainIndexes: no visible terrain patches\n");
         return;
     }
 
@@ -598,6 +610,9 @@ void R_LoadTerrainIndexes(gamelump_t* lump) {
     for (i = 0; i < s_worldData.numVisTerraPatches; in++, out++, i++) {
         *out = &s_worldData.terraPatches[LittleShort(*in)];
     }
+
+    ri.Printf(PRINT_ALL, "R_LoadTerrainIndexes: %d indices, %d ms\n",
+        s_worldData.numVisTerraPatches, ri.Milliseconds() - tStart);
 }
 
 /*
@@ -2273,7 +2288,8 @@ void RE_LoadWorldMap( const char *name ) {
     VectorCopy(vDefSundir, tr.sunDirection);
     VectorNormalize( tr.sunDirection );
 
-    tr.worldMapLoaded = qtrue;
+    ri.Printf(PRINT_ALL, "RE_LoadWorldMap: %s (%d bytes)\n", name, length);
+    ri.Printf(PRINT_ALL, "  BSP cache: %s\n", s_bspCacheData ? "HIT" : "MISS (reading from file)");
 
     // load it
     length = ri.FS_OpenFile(name, &h, qtrue, qtrue);
