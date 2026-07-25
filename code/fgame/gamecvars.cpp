@@ -320,6 +320,9 @@ cvar_t *g_navigation_legacy;
 
 // Reopen door if blocked
 cvar_t *g_door_reopen_blocked;
+cvar_t *g_motd;
+cvar_t *g_disabledWeapons;
+cvar_t *g_voteTimeout;
 
 void CVAR_Init(void)
 {
@@ -725,6 +728,10 @@ void CVAR_Init(void)
     g_navigation_legacy = gi.Cvar_Get("g_navigation_legacy", "0", CVAR_LATCH);
 
     g_door_reopen_blocked = gi.Cvar_Get("g_door_reopen_blocked", "1", 0);
+
+    g_motd             = gi.Cvar_Get("g_motd", "", 0);
+    g_disabledWeapons  = gi.Cvar_Get("g_disabledWeapons", "", 0);
+    g_voteTimeout      = gi.Cvar_Get("g_voteTimeout", "30", 0);
 
     cl_running = gi.Cvar_Get("cl_running", "", 0);
 }

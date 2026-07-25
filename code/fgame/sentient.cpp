@@ -1173,6 +1173,18 @@ Item *Sentient::giveItem(str itemname, int amount)
     ClassDef *cls;
     Item     *item;
 
+    if (g_disabledWeapons && g_disabledWeapons->string[0]) {
+        const char *disabled = g_disabledWeapons->string;
+        const char *found = strstr(disabled, itemname);
+        if (found) {
+            int matchLen = (int)strlen(itemname);
+            if ((found == disabled || found[-1] == ',') &&
+                (found[matchLen] == '\0' || found[matchLen] == ',')) {
+                return NULL;
+            }
+        }
+    }
+
     item = FindItem(itemname);
     if (item) {
         item->Add(amount);

@@ -2020,7 +2020,8 @@ void Level::CheckVote(void)
 
     level.m_numVoters = numVoters;
 
-    if ((svsFloatTime - svsStartFloatTime) * 1000 - m_voteTime >= 30000) {
+    int voteTimeout = g_voteTimeout ? g_voteTimeout->integer * 1000 : 30000;
+    if ((svsFloatTime - svsStartFloatTime) * 1000 - m_voteTime >= voteTimeout) {
         G_PrintToAllClients(va("%s: %s\n", gi.CL_LV_ConvertString("Vote Failed"), m_voteName.c_str()));
         m_voteTime = 0;
         gi.setConfigstring(CS_VOTE_TIME, "");

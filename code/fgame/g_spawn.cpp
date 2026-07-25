@@ -1287,6 +1287,12 @@ void G_SpawnEntitiesFromString( void ) {
 	}
 	SP_worldspawn();
 
+	// exec mapname.cfg if it exists
+	cvar_t *mapname = gi.Cvar_Get("mapname", "", 0);
+	if (mapname->string[0]) {
+		gi.SendConsoleCommand(va("exec %s.cfg\n", mapname->string));
+	}
+
 	// parse ents
 	while( G_ParseSpawnVars() ) {
 		G_SpawnGEntityFromSpawnVars();

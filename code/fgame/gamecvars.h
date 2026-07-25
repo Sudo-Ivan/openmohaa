@@ -355,6 +355,10 @@ extern cvar_t *g_navigation_legacy;
 
 extern cvar_t *g_door_reopen_blocked;
 
+extern cvar_t *g_motd;
+extern cvar_t *g_disabledWeapons;
+extern cvar_t *g_voteTimeout;
+
 void CVAR_Init(void);
 
 #ifdef __cplusplus

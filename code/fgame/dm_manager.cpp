@@ -1482,6 +1482,10 @@ void DM_Manager::EventDoRoundTransition(Event *ev)
         level.Unregister(STRING_DRAW);
     }
 
+    gi.Printf("Scores: Allies %d - %d Axis (wins: Allies %d - %d Axis)\n",
+        m_team_allies.TotalPlayersKills(), m_team_axis.TotalPlayersKills(),
+        m_team_allies.m_teamwins, m_team_axis.m_teamwins);
+
     G_DisplayScoresToAllClients();
     PostEvent(EV_DM_Manager_FinishRoundTransition, 3.0f);
 }
