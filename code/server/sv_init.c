@@ -716,7 +716,11 @@ void SV_SpawnServer( const char *server, qboolean loadgame, qboolean restart, qb
 			// Added in 2.0
 			Com_sprintf( filename, sizeof( filename ), "maps/%s_sml.bsp", mapname );
 		}
-		CM_LoadMap( filename, qfalse, &checksum );
+		{
+			int tBSP = Sys_Milliseconds();
+			CM_LoadMap( filename, qfalse, &checksum );
+			Com_Printf( "BSP collision load: %5.2f seconds\n", ( float )( Sys_Milliseconds() - tBSP ) / 1000.0f );
+		}
 
 		// set checksum
 		Cvar_Set( "sv_mapChecksum", va( "%i", checksum ) );
@@ -764,7 +768,9 @@ void SV_SpawnServer( const char *server, qboolean loadgame, qboolean restart, qb
 	ge->SetMap( sv_mapname->string );
 
 	if( !keep_scripts ) {
+		int tPre = Sys_Milliseconds();
 		ge->Precache();
+		Com_Printf( "Precache: %5.2f seconds\n", ( float )( Sys_Milliseconds() - tPre ) / 1000.0f );
 	}
 
 	UI_LoadResource( "*138" );
@@ -794,7 +800,11 @@ void SV_SpawnServer( const char *server, qboolean loadgame, qboolean restart, qb
 		UI_LoadResource( "*139a" );
 
 		// tell the game dll to spawn entities
-		ge->SpawnEntities( CM_EntityString(), svs.time );
+		{
+			int tSpawn = Sys_Milliseconds();
+			ge->SpawnEntities( CM_EntityString(), svs.time );
+			Com_Printf( "Entity spawn: %5.2f seconds\n", ( float )( Sys_Milliseconds() - tSpawn ) / 1000.0f );
+		}
 
 		UI_LoadResource( "*140" );
 

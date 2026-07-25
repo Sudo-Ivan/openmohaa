@@ -29,6 +29,8 @@ Powered by [ioquake3](https://github.com/ioquake/ioq3) and the [F.A.K.K SDK](htt
 - test: add oracle, smoke, acceptance, and adversarial tests SHA: `51477368`
 - test: add adversarial tests that found 4 engine bugs SHA: `7b822f67`
 - fix(fgame): defer LZ77 compression and disk writes across frames to prevent save game freeze SHA: `75d8e5f2`
+- fix(server): add per-phase timing to level loading (BSP, precache, entity spawn)
+- fix(qcommon): cache raw BSP data after collision load for renderer to reuse, avoiding double file read
 
 *OpenMoHAA is an independent project and is not affiliated with or endorsed by Electronic Arts.*
 

@@ -134,6 +134,8 @@ These are safe to fix (internal engine bugs, no interop impact):
 
 9. **Save game freeze** -- LZ77 compression and synchronous disk writes in the save path (`SV_SaveGame` → `G_ArchiveLevel` → `Archiver::Close` → `ArchiveFile::Compress` + `FS_WriteFile`) block the main thread for 50-200ms, causing the game to freeze. Fix: split the save into a fast serialization phase (game paused briefly) and deferred compression+write phases processed across subsequent frames in `G_RunFrame`. Added `ArchiveFile::DetachBuffer()`, `Archiver::CloseDeferred()`, and a `DeferredSave_Flush()` phase machine. New test in `test_deferredsave` validates the CSVG compression format round-trip and buffer detach semantics.
 
+10. **Level loading speed -- double BSP read** -- Both `CM_LoadMap` (collision) and `RE_LoadWorldMap` (renderer) read the entire `.bsp` file independently, each seeking through 16-22 lumps. On non-dedicated servers this doubles BSP I/O. Fix: `CM_LoadMap` now caches the raw BSP bytes via `CM_SetBSPCache()` after collision load. `RE_LoadWorldMap` checks the cache via `CM_GetBSPCache()` and serves lumps from memory via `memcpy` in `R_LoadLump`, avoiding the second file open/seek/read cycle. Added `CM_ClearBSPCache()` for cleanup. Phase timing instrumentation added to `SV_SpawnServer` for BSP load, precache, and entity spawn phases.
+
 ## CI / Workflows
 
 - All workflows in `.github/workflows/` support `workflow_dispatch`

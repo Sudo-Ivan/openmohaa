@@ -2193,6 +2193,10 @@ R_LoadLump
 Loads a lump from the BSP file
 ==================
 */
+// Cached BSP data from collision loader; avoids re-reading the file
+static const byte *s_bspCacheData = NULL;
+static int         s_bspCacheLength = 0;
+
 int R_LoadLump(fileHandle_t handle, lump_t* lump, gamelump_t* glump, int size)
 {
     glump->buffer = NULL;
@@ -2201,11 +2205,14 @@ int R_LoadLump(fileHandle_t handle, lump_t* lump, gamelump_t* glump, int size)
     if (lump->filelen) {
         glump->buffer = ri.Hunk_AllocateTempMemory(lump->filelen);
 
-        if (ri.FS_Seek(handle, lump->fileofs, FS_SEEK_SET) < 0) {
-            Com_Error(ERR_DROP, "R_LoadLump: Error seeking to lump.");
+        if (s_bspCacheData && lump->fileofs + lump->filelen <= s_bspCacheLength) {
+            memcpy(glump->buffer, s_bspCacheData + lump->fileofs, lump->filelen);
+        } else {
+            if (ri.FS_Seek(handle, lump->fileofs, FS_SEEK_SET) < 0) {
+                Com_Error(ERR_DROP, "R_LoadLump: Error seeking to lump.");
+            }
+            ri.FS_Read(glump->buffer, lump->filelen, handle);
         }
-
-        ri.FS_Read(glump->buffer, lump->filelen, handle);
 
         if (size) {
             return lump->filelen / size;
@@ -2246,8 +2253,14 @@ void RE_LoadWorldMap( const char *name ) {
     dheader_t	header;
     fileHandle_t	h;
     int				length;
+    int				cacheChecksum;
     vec3_t			vDefSundir;
     gamelump_t		lump, lump2, lump3;
+
+    // try to reuse BSP data cached by collision loader
+    s_bspCacheData = NULL;
+    s_bspCacheLength = 0;
+    CM_GetBSPCache(name, &s_bspCacheData, &s_bspCacheLength, &cacheChecksum);
 
     vDefSundir[0] = 0.45f;
     vDefSundir[1] = 0.3f;

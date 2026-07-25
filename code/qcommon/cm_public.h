@@ -29,6 +29,9 @@ extern "C" {
 
 void		CM_LoadMap( const char *name, qboolean clientload, int *checksum);
 void		CM_ClearMap( void );
+void		CM_SetBSPCache( const char *name, const byte *data, int length, int checksum );
+qboolean	CM_GetBSPCache( const char *name, const byte **data, int *length, int *checksum );
+void		CM_ClearBSPCache( void );
 clipHandle_t CM_InlineModel( int index );		// 0 = world, 1 + are bmodels
 clipHandle_t CM_TempBoxModel( const vec3_t mins, const vec3_t maxs, int contents );
 

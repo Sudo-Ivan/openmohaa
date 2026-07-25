@@ -818,6 +818,53 @@ void CM_FreeLump( gamelump_t *lump )
 
 #define _R( id ) UI_LoadResource( "*" #id )
 
+//
+// BSP cache -- stores raw BSP file data after collision load
+// so the renderer can reuse it instead of re-reading the file.
+//
+static byte   *s_bspCacheData = NULL;
+static int     s_bspCacheLength = 0;
+static char    s_bspCacheName[MAX_QPATH] = "";
+static int     s_bspCacheChecksum = 0;
+
+void CM_SetBSPCache(const char *name, const byte *data, int length, int checksum)
+{
+    if (s_bspCacheData) {
+        Z_Free(s_bspCacheData);
+        s_bspCacheData = NULL;
+    }
+    s_bspCacheData = (byte *)Z_Malloc(length);
+    memcpy(s_bspCacheData, data, length);
+    s_bspCacheLength = length;
+    s_bspCacheChecksum = checksum;
+    Q_strncpyz(s_bspCacheName, name, sizeof(s_bspCacheName));
+}
+
+qboolean CM_GetBSPCache(const char *name, const byte **data, int *length, int *checksum)
+{
+    if (s_bspCacheData && !Q_stricmp(s_bspCacheName, name)) {
+        *data = s_bspCacheData;
+        *length = s_bspCacheLength;
+        *checksum = s_bspCacheChecksum;
+        return qtrue;
+    }
+    *data = NULL;
+    *length = 0;
+    *checksum = 0;
+    return qfalse;
+}
+
+void CM_ClearBSPCache(void)
+{
+    if (s_bspCacheData) {
+        Z_Free(s_bspCacheData);
+        s_bspCacheData = NULL;
+    }
+    s_bspCacheLength = 0;
+    s_bspCacheName[0] = '\0';
+    s_bspCacheChecksum = 0;
+}
+
 /*
 ==================
 CM_LoadMap
@@ -998,6 +1045,14 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	_R( 46 );
 	CM_FreeLump( &lump );
 	_R( 47 );
+	// cache raw BSP for renderer to reuse
+	if (!clientload) {
+		byte *cacheBuf;
+		FS_Seek(h, 0, FS_SEEK_SET);
+		cacheBuf = (byte *)Z_Malloc(length);
+		FS_Read(cacheBuf, length, h);
+		CM_SetBSPCache(name, cacheBuf, length, last_checksum);
+	}
 	FS_FCloseFile( h );
 	_R( 48 );
 	CM_InitBoxHull();
