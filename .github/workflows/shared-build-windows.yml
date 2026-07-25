@@ -250,11 +250,9 @@ jobs:
         cmake -B ./build ${{ env.CMAKE_PARAM }} ./source
 
     - name: Build
-      shell: bash
       working-directory: ${{github.workspace}}
       run: |
-        cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel 2>&1 | (grep -vE "^\[" || true)
-        exit ${PIPESTATUS[0]}
+        cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel
 
     - name: Install
       working-directory: ${{github.workspace}}
