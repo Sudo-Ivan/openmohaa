@@ -22,6 +22,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "q_shared.h"
 #include <stdarg.h>
+#include <time.h>
+
+int Sys_Milliseconds(void)
+{
+    struct timespec ts;
+
+    if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) {
+        return 0;
+    }
+
+    return (int)(ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
+}
 
 void QDECL Com_Printf(const char *fmt, ...)
 {

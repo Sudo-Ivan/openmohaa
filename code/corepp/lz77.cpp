@@ -47,6 +47,8 @@ cLZ77::cLZ77()
 
 unsigned int cLZ77::CompressData(unsigned char *in, size_t in_len, unsigned char *out, size_t *out_len)
 {
+    memset(cLZ77::m_pDictionary, 0, sizeof(cLZ77::m_pDictionary));
+
     this->in_end = &in[in_len];
     this->ip_end = &in[in_len - 13];
     this->op     = out;
@@ -194,8 +196,8 @@ unsigned int cLZ77::CompressData(unsigned char *in, size_t in_len, unsigned char
 
 int cLZ77::Compress(unsigned char *in, size_t in_len, unsigned char *out, size_t *out_len)
 {
-    byte  *op = out;
-    size_t t  = 0;
+    byte  *out_p = out;
+    size_t t     = 0;
 
     if (in_len == 0) {
         *out_len = 0;
@@ -203,47 +205,49 @@ int cLZ77::Compress(unsigned char *in, size_t in_len, unsigned char *out, size_t
     }
 
     if (in_len > 13) {
-        t  = CompressData(in, in_len, out, out_len);
-        op = out + *out_len;
+        t      = CompressData(in, in_len, out, out_len);
+        out_p = out + *out_len;
     } else {
         t = in_len;
     }
 
     if (t) {
-        if (op == out && t <= 238) {
-            *op++ = t + 17;
+        if (out_p == out && t <= 238) {
+            *out_p++ = t + 17;
         } else if (t <= 3) {
-            *(op - 2) |= t;
+            *(out_p - 2) |= t;
         } else if (t <= 18) {
-            *op++ = t - 3;
+            *out_p++ = t - 3;
         } else {
             unsigned int tt;
 
-            *op++ = 0;
+            *out_p++ = 0;
 
             tt = t - 18;
             while (tt > 255) {
                 tt -= 255;
-                *op++ = 0;
+                *out_p++ = 0;
             }
 
-            *op++ = tt;
+            *out_p++ = tt;
         }
 
-        copy_bytes(op, &in[in_len - t], t);
-        op += t;
+        copy_bytes(out_p, &in[in_len - t], t);
+        out_p += t;
     }
 
-    *op++    = 17;
-    *op++    = 0;
-    *op++    = 0;
-    *out_len = op - out;
+    *out_p++ = 17;
+    *out_p++ = 0;
+    *out_p++ = 0;
+    *out_len = out_p - out;
 
     return 0;
 }
 
 void cLZ77::CompressBegin(unsigned char *in, size_t in_len, unsigned char *out)
 {
+    memset(cLZ77::m_pDictionary, 0, sizeof(cLZ77::m_pDictionary));
+
     this->m_inStart  = in;
     this->m_outStart = out;
     this->in_end     = &in[in_len];
@@ -258,50 +262,50 @@ void cLZ77::CompressBegin(unsigned char *in, size_t in_len, unsigned char *out)
 
 void cLZ77::CompressTail(size_t in_len, size_t *out_len)
 {
-    unsigned char *out;
-    unsigned char *in;
-    unsigned char *op;
+    unsigned char *out_base;
+    unsigned char *in_base;
+    unsigned char *out_p;
     size_t         t;
 
-    in  = this->m_inStart;
-    out = this->m_outStart;
-    op  = this->op;
-    t   = (size_t)(this->in_end - this->ii);
+    in_base  = this->m_inStart;
+    out_base = this->m_outStart;
+    out_p    = this->op;
+    t        = (size_t)(this->in_end - this->ii);
 
     if (in_len <= 13) {
-        t  = in_len;
-        op = out;
+        t     = in_len;
+        out_p = out_base;
     }
 
     if (t) {
-        if (op == out && t <= 238) {
-            *op++ = (unsigned char)(t + 17);
+        if (out_p == out_base && t <= 238) {
+            *out_p++ = (unsigned char)(t + 17);
         } else if (t <= 3) {
-            *(op - 2) |= (unsigned char)t;
+            *(out_p - 2) |= (unsigned char)t;
         } else if (t <= 18) {
-            *op++ = (unsigned char)(t - 3);
+            *out_p++ = (unsigned char)(t - 3);
         } else {
             unsigned int tt;
 
-            *op++ = 0;
+            *out_p++ = 0;
 
             tt = (unsigned int)(t - 18);
             while (tt > 255) {
                 tt -= 255;
-                *op++ = 0;
+                *out_p++ = 0;
             }
 
-            *op++ = (unsigned char)tt;
+            *out_p++ = (unsigned char)tt;
         }
 
-        copy_bytes(op, &in[in_len - t], t);
-        op += t;
+        copy_bytes(out_p, &in_base[in_len - t], t);
+        out_p += t;
     }
 
-    *op++    = 17;
-    *op++    = 0;
-    *op++    = 0;
-    *out_len = (size_t)(op - out);
+    *out_p++ = 17;
+    *out_p++ = 0;
+    *out_p++ = 0;
+    *out_len = (size_t)(out_p - out_base);
 }
 
 int cLZ77::CompressContinue(size_t *out_len, int max_ms)
@@ -630,38 +634,4 @@ int cLZ77::Decompress(unsigned char *in, size_t in_len, unsigned char *out, size
     }
 
     return (ip < ip_end) ? -1 : -2;
-}
-
-static unsigned char in[0x40000];
-static unsigned char out[0x41013];
-
-static void test_compression()
-{
-    size_t in_len;
-    size_t out_len;
-    size_t new_len;
-    cLZ77  lz77;
-
-    memset(&in, 0, 0x40000);
-
-    if (lz77.Compress(in, sizeof(in), out, &out_len)) {
-        puts("Compression Failed!");
-        return;
-    }
-
-    printf("Compressed %i bytes into %zi bytes\n", 0x40000, out_len);
-
-    if (lz77.Decompress(out, out_len, in, &in_len)) {
-        new_len = in_len;
-    } else {
-        new_len = in_len;
-
-        if (in_len == 0x40000) {
-            printf("Decompressed %zi bytes into %i bytes\n", out_len, 0x40000);
-            puts("Compression Test: Passed");
-            return;
-        }
-    }
-
-    printf("Decompression got FuBar'd... %i != %zi\n", 0x40000, new_len);
 }

@@ -113,7 +113,7 @@ protected:
 public:
     Archiver();
     ~Archiver();
-    void FileError(const char *fmt, ...);
+    void FileError(const char *fmt, ...) Q_PRINTF_FUNC(2, 3);
     void Close(void);
     void CloseDeferred(void);
 
@@ -121,12 +121,12 @@ public:
     size_t   FileLength(void);
     byte    *DetachFileBuffer(void);
 
-    qboolean Read(str& name, qboolean harderror = qtrue);
-    qboolean Read(const char *name, qboolean harderror = qtrue);
+    qboolean Read(str& name, qboolean bHardError = qtrue);
+    qboolean Read(const char *name, qboolean bHardError = qtrue);
     Class   *ReadObject(void);
 
-    qboolean Create(str& name, qboolean harderror = qtrue);
-    qboolean Create(const char *name, qboolean harderror = qtrue);
+    qboolean Create(str& name, qboolean bHardError = qtrue);
+    qboolean Create(const char *name, qboolean bHardError = qtrue);
 
     qboolean Loading(void);
     qboolean Saving(void);

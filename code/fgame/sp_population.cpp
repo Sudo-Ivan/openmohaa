@@ -45,11 +45,11 @@ float SpPopulation_Scale(void)
     return g_sp_population_scale->value;
 }
 
-void SpPopulation_ApplyWorld(World *world)
+void SpPopulation_ApplyWorld(World *levelWorld)
 {
     float scale;
 
-    if (!world || !g_gametype || g_gametype->integer != GT_SINGLE_PLAYER) {
+    if (!levelWorld || !g_gametype || g_gametype->integer != GT_SINGLE_PLAYER) {
         return;
     }
 
@@ -58,7 +58,7 @@ void SpPopulation_ApplyWorld(World *world)
         return;
     }
 
-    world->m_fAIVisionDistance *= scale;
+    levelWorld->m_fAIVisionDistance *= scale;
 }
 
 float SpPopulation_ScaledChance(float baseChance)

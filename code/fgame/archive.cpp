@@ -342,8 +342,8 @@ qboolean ArchiveFile::Write(const void *source, size_t size)
     memcpy(pos, source, size);
     pos += size;
 
-    if (length < (pos - buffer)) {
-        length = (pos - buffer);
+    if (length < (size_t)(pos - buffer)) {
+        length = (size_t)(pos - buffer);
     }
 
     return true;
@@ -512,34 +512,6 @@ byte *Archiver::DetachFileBuffer(void)
     return archivefile.DetachBuffer();
 }
 
-static void DeferredSave_CompressBuffer(byte **buf, size_t *len)
-{
-    size_t out_len;
-    size_t tempbuf_len;
-    byte  *tempbuf;
-
-    tempbuf_len = (*len >> 6) + *len + 27;
-    tempbuf     = (byte *)gi.Malloc(tempbuf_len);
-
-    tempbuf[0] = 'C';
-    tempbuf[1] = 'S';
-    tempbuf[2] = 'V';
-    tempbuf[3] = 'G';
-
-    unsigned int temp_le = *len;
-    CopyLittleLong(tempbuf + 4, &temp_le);
-
-    if (g_lz77.Compress(*buf, *len, tempbuf + 8, &out_len)) {
-        gi.Free(tempbuf);
-        gi.Error(ERR_DROP, "DeferredSave: Compression failed!\n");
-        return;
-    }
-
-    gi.Free(*buf);
-    *buf = tempbuf;
-    *len = out_len + 8;
-}
-
 typedef enum {
     DEFERRED_IDLE,
     DEFERRED_COMPRESS,
@@ -705,7 +677,7 @@ File Read/Write functions
 
 *****************************************************************************************/
 
-qboolean Archiver::Read(const char *name, qboolean harderror)
+qboolean Archiver::Read(const char *name, qboolean bHardError)
 {
     unsigned header;
     unsigned version;
@@ -714,20 +686,20 @@ qboolean Archiver::Read(const char *name, qboolean harderror)
     int      i;
     Class   *null;
 
-    this->harderror   = harderror;
+    this->harderror   = bHardError;
     this->fileerror   = false;
     this->archivemode = ARCHIVE_READ;
     this->filename    = name;
 
     if (!archivefile.OpenRead(filename.c_str())) {
-        if (harderror) {
+        if (bHardError) {
             FileError("Couldn't open file.");
         }
         return false;
     }
 
     ArchiveUnsigned(&header);
-    if (header != ArchiveHeader) {
+    if (header != (unsigned)ArchiveHeader) {
         archivefile.Close();
         FileError("Not a valid MOHAA archive.");
         return false;
@@ -760,14 +732,14 @@ qboolean Archiver::Read(const char *name, qboolean harderror)
     return true;
 }
 
-qboolean Archiver::Create(const char *name, qboolean harderror)
+qboolean Archiver::Create(const char *name, qboolean bHardError)
 {
     unsigned header;
     unsigned version;
     str      info;
     int      numZero = 0;
 
-    this->harderror   = harderror;
+    this->harderror   = bHardError;
     this->fileerror   = false;
     this->archivemode = ARCHIVE_WRITE;
     this->filename    = name;
@@ -1346,14 +1318,14 @@ void Archiver::CheckWrite(void)
     }
 }
 
-qboolean Archiver::Read(str& name, qboolean harderror)
+qboolean Archiver::Read(str& name, qboolean bHardError)
 {
-    return Read(name.c_str(), harderror);
+    return Read(name.c_str(), bHardError);
 }
 
-qboolean Archiver::Create(str& name, qboolean harderror)
+qboolean Archiver::Create(str& name, qboolean bHardError)
 {
-    return Create(name.c_str(), harderror);
+    return Create(name.c_str(), bHardError);
 }
 
 qboolean Archiver::Loading(void)
@@ -1442,7 +1414,7 @@ void Archiver::CheckType(int type)
     if (archivemode == ARCHIVE_READ) {
         if (!fileerror) {
             t = ReadType();
-            if (t != type) {
+            if ((int)t != type) {
                 if (t < ARC_NUMTYPES) {
                     FileError("Expecting %s, Should be %s", typenames[type], typenames[t]);
                     assert(0);

@@ -228,6 +228,33 @@ static void test_csvg_buffer_detach()
     expect_int_eq("decompressed all 0x42 last", decompressed[255], 0x42);
 }
 
+static void test_incremental_compress_matches_one_shot(void)
+{
+    std::printf("test_incremental_compress_matches_one_shot...\n");
+
+    unsigned char in[8192];
+    unsigned char out_one[9000];
+    unsigned char out_slice[9000];
+    size_t        len_one;
+    size_t        len_slice;
+    cLZ77         lz;
+    int           remaining;
+
+    for (size_t i = 0; i < sizeof(in); i++) {
+        in[i] = (unsigned char)((i * 17 + 31) & 0xff);
+    }
+
+    expect_int_eq("one_shot compress", lz.Compress(in, sizeof(in), out_one, &len_one), 0);
+
+    lz.CompressBegin(in, sizeof(in), out_slice);
+    do {
+        remaining = lz.CompressContinue(&len_slice, 0);
+    } while (remaining > 0);
+
+    expect_int_eq("slice length matches one_shot", (int)len_slice, (int)len_one);
+    expect_int_eq("slice output matches one_shot", memcmp(out_one, out_slice, len_one), 0);
+}
+
 int main()
 {
     failures = 0;
@@ -236,6 +263,7 @@ int main()
     test_csvg_empty();
     test_csvg_tiny();
     test_csvg_buffer_detach();
+    test_incremental_compress_matches_one_shot();
 
     if (failures) {
         std::fprintf(stderr, "%d deferred save test(s) failed\n", failures);
