@@ -848,6 +848,7 @@ static qboolean ParseStage(shaderStage_t* stage, char** text, qboolean picmip)
 	qboolean shouldProcess = qtrue;
 
 	stage->active = qtrue;
+	stage->multitextureEnv = GL_MODULATE;
 	stage->noMipMaps = shader_noMipMaps;
 	stage->noPicMip = shader_noPicMip;
 	stage->force32bit = shader_force32bit;

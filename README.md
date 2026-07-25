@@ -14,6 +14,8 @@ Powered by [ioquake3](https://github.com/ioquake/ioq3) and the [F.A.K.K SDK](htt
 
 ## Our changes
 
+- fix(renderer): default multitextureEnv to GL_MODULATE to fix invalid env crash (#864)
+- fix(fgame): change registercmd to EV_RETURN so it works in script expressions (#672)
 - fix(fgame): add EV_GETTER for Item amount/dmamount/name (#920) `28ff8f0c`
 - fix(server): read bans from homestatepath for rehashbans (#926) `28ff8f0c`
 - fix(fgame): use uint32_t for md5_word_t to fix non-deterministic MD5 hashes (#928) `ba3dfdf8`

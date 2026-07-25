@@ -1176,7 +1176,7 @@ Event EV_ScriptThread_RegisterCommand
     "ss",
     "name label",
     "Registers a command.",
-    EV_NORMAL
+    EV_RETURN
 );
 
 //
@@ -4826,6 +4826,8 @@ void ScriptThread::EventRegisterCommand(Event *ev)
     scriptLabel.SetThread(ev->GetValue(2));
 
     m_scriptCmds.addKeyValue(ev->GetString(1)) = scriptLabel;
+
+    ev->AddValue(scriptLabel.GetThread());
 }
 
 void ScriptThread::CreateHUD(Event *ev)
