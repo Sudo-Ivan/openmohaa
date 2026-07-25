@@ -199,6 +199,15 @@ Event EV_Item_SetAmount
     "Sets the amount of the item.",
     EV_NORMAL
 );
+Event EV_Item_GetAmount
+(
+    "amount",
+    EV_DEFAULT,
+    NULL,
+    NULL,
+    "Returns the amount of the item.",
+    EV_GETTER
+);
 Event EV_Item_SetMaxAmount
 (
     "maxamount",
@@ -217,6 +226,15 @@ Event EV_Item_SetDMAmount
     "Sets the amount of the item for DM.",
     EV_NORMAL
 );
+Event EV_Item_GetDMAmount
+(
+    "dmamount",
+    EV_DEFAULT,
+    NULL,
+    NULL,
+    "Returns the DM amount of the item.",
+    EV_GETTER
+);
 Event EV_Item_SetDMMaxAmount
 (
     "dmmaxamount",
@@ -234,6 +252,15 @@ Event EV_Item_SetItemName
     "item_name",
     "Sets the item name.",
     EV_NORMAL
+);
+Event EV_Item_GetItemName
+(
+    "name",
+    EV_DEFAULT,
+    NULL,
+    NULL,
+    "Returns the item name.",
+    EV_GETTER
 );
 Event EV_Item_RespawnSound
 (
@@ -318,8 +345,10 @@ CLASS_DECLARATION(Trigger, Item, NULL) {
     {&EV_Item_DropToFloor,     &Item::DropToFloor          },
     {&EV_Item_Respawn,         &Item::Respawn              },
     {&EV_Item_SetAmount,       &Item::SetAmountEvent       },
+    {&EV_Item_GetAmount,       &Item::GetAmountEvent       },
     {&EV_Item_SetMaxAmount,    &Item::SetMaxAmount         },
     {&EV_Item_SetItemName,     &Item::SetItemName          },
+    {&EV_Item_GetItemName,     &Item::GetItemNameEvent     },
     {&EV_Item_Pickup,          &Item::Pickup               },
     {&EV_Use,                  &Item::TriggerStuff         },
     {&EV_Item_RespawnSound,    &Item::RespawnSound         },
@@ -332,6 +361,7 @@ CLASS_DECLARATION(Trigger, Item, NULL) {
     {&EV_Stop,                 &Item::Landed               },
     {&EV_SetAngle,             &SimpleEntity::SetAngleEvent},
     {&EV_Item_SetDMAmount,     &Item::SetDMAmountEvent     },
+    {&EV_Item_GetDMAmount,     &Item::GetDMAmountEvent     },
     {&EV_Item_SetDMMaxAmount,  &Item::SetDMMaxAmount       },
     {&EV_Item_SetPickupSound,  &Item::SetPickupSound       },
 #ifdef OPM_FEATURES
@@ -776,6 +806,21 @@ void Item::setAmount(int startamount)
 void Item::SetMax(int maxamount)
 {
     maximum_amount = maxamount;
+}
+
+void Item::GetAmountEvent(Event *ev)
+{
+    ev->AddInteger(getAmount());
+}
+
+void Item::GetDMAmountEvent(Event *ev)
+{
+    ev->AddInteger(getAmount());
+}
+
+void Item::GetItemNameEvent(Event *ev)
+{
+    ev->AddString(getName());
 }
 
 void Item::SetAmountEvent(Event *ev)

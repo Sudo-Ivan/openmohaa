@@ -604,7 +604,8 @@ static void SV_RehashBans_f(void)
 
 	Com_sprintf(filepath, sizeof(filepath), "%s/%s", FS_GetCurrentGameDir(), sv_banFile->string);
 
-	if((filelen = FS_BaseDir_FOpenFileRead(filepath, &readfrom)) >= 0)
+	// Read from the same path where bans are written (fs_homestatepath)
+	if((filelen = FS_BaseDir_FOpenFileRead_HomeState(filepath, &readfrom)) >= 0)
 	{
 		if(filelen < 2)
 		{

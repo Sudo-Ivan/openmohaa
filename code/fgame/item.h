@@ -35,10 +35,13 @@ extern Event EV_Item_Pickup;
 extern Event EV_Item_DropToFloor;
 extern Event EV_Item_Respawn;
 extern Event EV_Item_SetAmount;
+extern Event EV_Item_GetAmount;
 extern Event EV_Item_SetMaxAmount;
 extern Event EV_Item_RespawnSound;
 extern Event EV_Item_DialogNeeded;
 extern Event EV_Item_PickupDone;
+extern Event EV_Item_GetDMAmount;
+extern Event EV_Item_GetItemName;
 
 #define DROPPED_ITEM        0x00008000
 #define DROPPED_PLAYER_ITEM 0x00010000
@@ -101,6 +104,9 @@ public:
     virtual str  getName(void);
     virtual int  getIndex(void);
     virtual void SetAmountEvent(Event *ev);
+    virtual void GetAmountEvent(Event *ev);
+    virtual void GetDMAmountEvent(Event *ev);
+    virtual void GetItemNameEvent(Event *ev);
     virtual void SetMaxAmount(Event *ev);
     virtual void SetDMAmountEvent(Event *ev);
     virtual void SetDMMaxAmount(Event *ev);

@@ -893,6 +893,58 @@ fileHandle_t FS_BaseDir_FOpenFileWrite_HomeState( const char *filename ) {
 
 /*
 ===========
+FS_BaseDir_FOpenFileRead_HomeState
+
+Search for a file exclusively in the home state path.
+===========
+*/
+long FS_BaseDir_FOpenFileRead_HomeState(const char *filename, fileHandle_t *fp)
+{
+	char *ospath;
+	fileHandle_t f = 0;
+
+	if ( !fs_searchpaths ) {
+		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
+	}
+
+	if ( !filename || COM_IsPathTraversal( filename ) ) {
+		*fp = 0;
+		return -1;
+	}
+
+	f = FS_HandleForFile();
+	fsh[f].zipFile = qfalse;
+
+	Q_strncpyz( fsh[f].name, filename, sizeof( fsh[f].name ) );
+
+	// don't let sound stutter
+	S_ClearSoundBuffer();
+
+	ospath = FS_BaseDir_BuildOSPath( fs_homestatepath->string, filename );
+
+	if ( fs_debug->integer )
+	{
+		Com_Printf( "FS_BaseDir_FOpenFileRead_HomeState: %s\n", ospath );
+	}
+
+	fsh[f].handleFiles.file.o = Sys_FOpen( ospath, "rb" );
+	fsh[f].handleSync = qfalse;
+
+	if (!fsh[f].handleFiles.file.o)
+	{
+		f = 0;
+	}
+
+	*fp = f;
+	if (f) {
+		return FS_filelength(f);
+	}
+
+	return -1;
+}
+
+/*
+===========
 FS_BaseDir_FOpenFileRead
 
 Search for a file somewhere below the home path then base path
