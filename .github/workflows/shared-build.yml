@@ -1,6 +1,11 @@
 name: Shared build workflow
 
 on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        required: true
+        type: string
   workflow_call:
     inputs:
       environment:
