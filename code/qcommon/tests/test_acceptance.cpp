@@ -310,7 +310,7 @@ static void test_adversarial()
     (void)rsqrt;
 
     // Inf as vector component - should not crash
-    vec3_t inf_vec = {1.0f / 0.0f, 0.0f, 0.0f};
+    vec3_t inf_vec = {INFINITY, 0.0f, 0.0f};
     vec3_t norm_out;
     VectorNormalize2(inf_vec, norm_out);
     // Should not crash; result is implementation-defined

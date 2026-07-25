@@ -375,7 +375,7 @@ static void test_info_max_lengths()
 //
 static void test_angle_nan()
 {
-    float nan = 0.0f / 0.0f;
+    float nan = NAN;
     float result = AngleNormalize360(nan);
     // Result should be NaN too (or at least not crash)
     bool is_nan = (result != result);
