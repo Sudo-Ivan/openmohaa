@@ -22,6 +22,28 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "q_shared.h"
 #include <stdarg.h>
+
+#ifdef _WIN32
+#include <windows.h>
+
+static LARGE_INTEGER s_perf_freq;
+static LARGE_INTEGER s_perf_base;
+static qboolean      s_perf_init;
+
+int Sys_Milliseconds(void)
+{
+    LARGE_INTEGER now;
+
+    if (!s_perf_init) {
+        QueryPerformanceFrequency(&s_perf_freq);
+        QueryPerformanceCounter(&s_perf_base);
+        s_perf_init = qtrue;
+    }
+
+    QueryPerformanceCounter(&now);
+    return (int)((now.QuadPart - s_perf_base.QuadPart) * 1000 / s_perf_freq.QuadPart);
+}
+#else
 #include <time.h>
 
 int Sys_Milliseconds(void)
@@ -34,6 +56,7 @@ int Sys_Milliseconds(void)
 
     return (int)(ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
 }
+#endif
 
 void QDECL Com_Printf(const char *fmt, ...)
 {
